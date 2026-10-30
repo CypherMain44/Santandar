@@ -1,0 +1,41 @@
+# ---------- Backend (Java / Maven) ----------
+backend/target/
+**/target/
+*.class
+*.jar
+*.war
+!**/.mvn/wrapper/maven-wrapper.jar
+
+# ---------- Frontend (Node) ----------
+frontend/node_modules/
+node_modules/
+frontend/dist/
+frontend/build/
+dist/
+build/
+.angular/
+.next/
+
+# ---------- Credenciales y configuración local (NUNCA subir) ----------
+.env
+.env.*
+!.env.example
+application-local.properties
+application-local.yml
+backend/src/main/resources/application-local.properties
+
+# ---------- IDEs ----------
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+.sts4/
+.factorypath
+
+# ---------- Sistema operativo y logs ----------
+.DS_Store
+Thumbs.db
+*.log
+logs/
