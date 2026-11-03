@@ -20,9 +20,9 @@ build/
 .env
 .env.*
 !.env.example
-application-local.properties
-application-local.yml
-backend/src/main/resources/application-local.properties
+application.properties
+application.yml
+backend/src/main/resources/application.properties
 
 # ---------- IDEs ----------
 .idea/
