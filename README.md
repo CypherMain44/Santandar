@@ -57,7 +57,7 @@ La API queda disponible en `http://localhost:8080`.
 
 - `main`: código estable, solo para entregas.
 - `develop`: integración del trabajo del sprint.
-- `feature/nombre-de-la-tarea`: una rama por historia de usuario, que se integra a `develop` mediante Pull Request revisado por otro integrante.
+
 
 Prefijos para los mensajes de commit:
 
@@ -70,6 +70,6 @@ Prefijos para los mensajes de commit:
 
 ## Equipo
 
-- _Integrante 1_
-- _Integrante 2_
-- _Integrante 3_
+- _William Fernando Basto Corzo - 2235607_
+- _Javier Alberto Alean Gonzalez - 2235610_
+- _David Alejandro Sandoval Rojas - 2235656_
