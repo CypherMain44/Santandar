@@ -1,3 +1,4 @@
+package edu.uis.santandar_backend.service.impl;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -109,4 +109,20 @@ class CajaConsultaServiceImplTest {
 
     @Test
     void consultarPorQr_CuandoExiste_DebeRetornarCaja() {
-        when(cajaRepository.findById
+        when(cajaRepository.findByIdentificadorQR("QR123")).thenReturn(Optional.of(caja));
+        when(cajaMapper.toResponse(caja)).thenReturn(cajaResponse);
+
+        CajaResponse resultado = cajaConsultaService.consultarPorQr("QR123");
+
+        assertNotNull(resultado);
+        assertEquals("QR123", resultado.identificadorQR());
+    }
+
+    @Test
+    void consultarPorQr_CuandoNoExiste_DebeLanzarExcepcion() {
+        when(cajaRepository.findByIdentificadorQR("QR123")).thenReturn(Optional.empty());
+
+        assertThrows(RecursoNoEncontradoException.class,
+                () -> cajaConsultaService.consultarPorQr("QR123"));
+    }
+}
