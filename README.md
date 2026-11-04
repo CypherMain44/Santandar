@@ -42,7 +42,7 @@ Define estas variables en tu computador o en la configuración de ejecución del
 | `MONGODB_URI` | Cadena de conexión de MongoDB Atlas (con el nombre de la base de datos `santandar`) |
 | `JWT_SECRET` | Texto aleatorio de mínimo 32 caracteres (cuando se implemente la seguridad) |
 
-En `backend/src/main/resources/application-example.properties` hay una guía de las propiedades. **Nunca subas credenciales reales al repositorio.**
+
 
 ### 3. Ejecutar
 
