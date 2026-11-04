@@ -13,7 +13,7 @@ Sistema web para la gestión de inventario y trazabilidad de donaciones mediante
 |---|---|
 | Backend | Java 21, Spring Boot, Spring Security (JWT), Spring Data MongoDB |
 | Base de datos | MongoDB Atlas |
-| Frontend | _Por definir_ |
+| Frontend | _Java Script , CSS , HTML_ |
 
 ## Estructura del repositorio
 
