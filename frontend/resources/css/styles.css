@@ -17,6 +17,7 @@
   --header-h: 68px;
   --sidebar-w: 232px;
   --font: "Segoe UI", system-ui, sans-serif;
+  --brand-logo: url("../images/logo.svg");
 }
 
 * { box-sizing: border-box; }
@@ -75,6 +76,7 @@ body.is-login { background: var(--green); }
 
 .logo-slot {
   flex: none;
+  background: var(--brand-logo) center / contain no-repeat;
 }
 
 .logo-slot--login {

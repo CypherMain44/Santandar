@@ -20,11 +20,21 @@ Sistema web para la gestión de inventario y trazabilidad de donaciones mediante
 ```
 santandar/
 ├── backend/     API REST (Spring Boot)
-├── frontend/    Aplicación web
+├── frontend/    Aplicación web estática
+│   ├── index.html
+│   ├── views/       Organización y guía de las pantallas
+│   └── resources/
+│       ├── css/
+│       ├── js/
+│       └── images/  Logo y recursos gráficos
 └── docs/
     ├── diagramas/   Diagramas UML
     └── informes/    Requerimientos, EDT y gestión del proyecto
 ```
+
+Las pantallas actuales son secciones de `frontend/index.html`; consulta
+`frontend/views/README.md` para agregar una y `frontend/resources/images/README.md`
+para incorporar el logo.
 
 ## Puesta en marcha del backend
 
