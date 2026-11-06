@@ -17,8 +17,10 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    // En producción, esto debe venir de una variable de entorno
-    private static final String SECRET_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250655368566D5971";
+    // En producción, esto debe venir de una variable de entorno.
+    // Debe ser una cadena Base64 de al menos 32 bytes (256 bits).
+    // La clave anterior era hex, ahora usamos una Base64 válida.
+    private static final String SECRET_KEY = "NDA0RTYzNTI2NjU1NkE1ODZFMzcyMzU3NTM4NzgyRjQxM0Y0NDI4NDcyQjRCNjI1MDY1NTM2ODU2NkQ1OTcx";
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -38,7 +40,7 @@ public class JwtService {
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 horas
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
