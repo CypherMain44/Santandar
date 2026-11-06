@@ -74,26 +74,32 @@ body.is-login { background: var(--green); }
   margin-bottom: 42px;
 }
 
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
 .logo-slot {
   flex: none;
   background: var(--brand-logo) center / contain no-repeat;
 }
 
 .logo-slot--login {
-  width: 96px;
-  height: 78px;
-  margin: 0 auto 2px;
+  width: 72px;
+  height: 72px;
 }
 
 .brand-pill h1 {
   margin: 0;
   color: var(--green-ink);
-  font-size: 2rem;
+  font-size: 2.1rem;
   letter-spacing: -0.03em;
 }
 
 .brand-pill p {
-  margin: 4px 0 0;
+  margin: 8px 0 0;
   color: #7e9088;
   font-size: 0.74rem;
 }
@@ -552,6 +558,9 @@ a:focus-visible {
   .app-main { padding: 20px 16px 96px; }
 
   .brand-pill { padding: 22px 20px 16px; border-radius: 36px; }
+  .brand-lockup { gap: 8px; }
+  .logo-slot--login { width: 60px; height: 60px; }
+  .brand-pill h1 { font-size: 1.8rem; }
 
   .brand-name { font-size: 1.3rem; }
 

@@ -1,8 +1,8 @@
 # Imágenes
 
-Agrega aquí los recursos gráficos del frontend. Para mostrar el logo de
-SantanDar, guarda el archivo como `logo.svg`; los espacios de logo de la
-pantalla de inicio de sesión y de la barra superior lo cargarán automáticamente.
+Agrega aquí los recursos gráficos del frontend. El archivo `logo.svg` se usa
+automáticamente junto al nombre de SantanDar en el inicio de sesión y en la
+barra superior.
 
 Si el logo tiene otro nombre o formato, actualiza la variable `--brand-logo` en
 [`../css/styles.css`](../css/styles.css).
