@@ -16,8 +16,6 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    // En producción, esto debe venir de una variable de entorno.
-    // Debe ser una cadena Base64 de al menos 32 bytes (256 bits).
     private static final String SECRET_KEY = "NDA0RTYzNTI2NjU1NkE1ODZFMzcyMzU3NTM4NzgyRjQxM0Y0NDI4NDcyQjRCNjI1MDY1NTM2ODU2NkQ1OTcx";
 
     public String extractUsername(String token) {

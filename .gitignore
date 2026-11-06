@@ -39,3 +39,4 @@ backend/src/main/resources/application.properties
 Thumbs.db
 *.log
 logs/
+.aider*

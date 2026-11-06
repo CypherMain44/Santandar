@@ -45,10 +45,10 @@ class CajaConsultaServiceImplTest {
                 .identificadorQR("QR123")
                 .contenido("Ropa")
                 .zonaDestino("Zona A")
-                .estadoCaja(EstadoCaja.ALMACENADA)
+                .estadoCaja(EstadoCaja.NO_DESPACHADO)
                 .build();
 
-        cajaResponse = new CajaResponse("caja-1", "QR123", "Ropa", "Zona A", EstadoCaja.ALMACENADA);
+        cajaResponse = new CajaResponse("caja-1", "QR123", "Ropa", "Zona A", EstadoCaja.NO_DESPACHADO);
     }
 
     @Test
