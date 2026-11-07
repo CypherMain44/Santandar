@@ -7,7 +7,7 @@ import edu.uis.santandar_backend.dto.request.LoginRequest;
 import edu.uis.santandar_backend.dto.request.RegistroUsuarioRequest;
 import edu.uis.santandar_backend.dto.response.AuthResponse;
 import edu.uis.santandar_backend.dto.response.UsuarioResponse;
-import edu.uis.santandar_backend.service.JwtService;
+import edu.uis.santandar_backend.config.JwtService;
 import edu.uis.santandar_backend.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ public class UsuarioController {
     private final JwtService jwtService;
 
     @PostMapping("/auth/login")
-    public AuthResponse login(@RequestBody LoginRequest request) {
+    public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.correo(), request.clave())
         );

@@ -1,9 +1,10 @@
-// Este archivo solo cambia la vista visible. No envía datos ni llama a la API.
-
 const loginView = document.getElementById("view-login");
 const appShell = document.getElementById("app-shell");
+const loginForm = document.getElementById("login-form");
+const loginMessage = document.getElementById("login-message");
 const navToggle = document.getElementById("nav-toggle");
 const navBackdrop = document.getElementById("nav-backdrop");
+const apiBaseUrl = document.querySelector('meta[name="api-base-url"]').content.replace(/\/$/, "");
 
 function closeDrawer() {
   appShell.classList.remove("is-nav-open");
@@ -40,7 +41,54 @@ navToggle.addEventListener("click", () => {
 
 navBackdrop.addEventListener("click", closeDrawer);
 
-document.querySelectorAll("form").forEach((form) => {
+loginForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  loginMessage.hidden = true;
+
+  const submitButton = loginForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        correo: loginForm.elements.correo.value.trim(),
+        clave: loginForm.elements.clave.value
+      })
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      loginMessage.textContent = response.status === 401
+        ? "Correo o clave incorrectos."
+        : "No fue posible iniciar sesión. Inténtalo de nuevo.";
+      loginMessage.hidden = false;
+      return;
+    }
+
+    if (typeof result.token !== "string" || !result.token) {
+      throw new Error("Respuesta de autenticación inválida");
+    }
+
+    sessionStorage.setItem("authToken", result.token);
+    loginForm.reset();
+    showView("inicio");
+  } catch (error) {
+    loginMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : "El servidor devolvió una respuesta inválida.";
+    loginMessage.hidden = false;
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+document.querySelectorAll(".nav-item").forEach((item) => {
+  item.addEventListener("click", () => showView(item.dataset.view));
+});
+
+document.querySelectorAll("form:not(#login-form)").forEach((form) => {
   form.addEventListener("submit", (event) => event.preventDefault());
 });
 

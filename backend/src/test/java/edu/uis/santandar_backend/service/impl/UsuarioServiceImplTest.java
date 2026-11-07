@@ -25,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -82,6 +83,15 @@ class UsuarioServiceImplTest {
         assertNotNull(resultado);
         assertEquals("usr-1", resultado.id());
         verify(usuarioRepository).save(admin);
+    }
+
+    @Test
+    void loadUserByUsername_DebeBuscarPorCorreoEnRepositorio() {
+        when(usuarioRepository.findByCorreo("admin@test.com")).thenReturn(Optional.of(admin));
+
+        assertSame(admin, usuarioService.loadUserByUsername("admin@test.com"));
+
+        verify(usuarioRepository).findByCorreo("admin@test.com");
     }
 
     @Test

@@ -156,6 +156,17 @@ body.is-login { background: var(--green); }
 
 .btn-login:hover { background: #f4f7f5; }
 
+.login-message {
+  color: #fff;
+  margin: 12px 0 0;
+  text-align: center;
+}
+
+.btn-login:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
 .login-links {
   display: flex;
   justify-content: space-between;
