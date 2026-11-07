@@ -475,6 +475,16 @@ body.is-login { background: var(--green); }
 
 .qr-error { color: #b42318; }
 
+.delete-confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.delete-confirm-actions .btn-outline,
+.delete-confirm-actions .btn-pill { min-width: 120px; }
+
 .pagination {
   display: flex;
   justify-content: flex-end;
@@ -520,6 +530,12 @@ body.is-login { background: var(--green); }
   text-align: center;
   font-size: 1.45rem;
   margin-bottom: 22px;
+}
+
+.register-message {
+  margin: 0 0 16px;
+  color: #b42318;
+  line-height: 1.5;
 }
 
 .field-mint {

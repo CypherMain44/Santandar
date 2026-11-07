@@ -14,6 +14,10 @@ const qrDialog = document.getElementById("qr-dialog");
 const qrCodeElement = document.getElementById("qr-code");
 const qrError = document.getElementById("qr-error");
 const qrDetails = document.getElementById("qr-details");
+const deleteConfirmDialog = document.getElementById("delete-confirm-dialog");
+const deleteConfirmMessage = document.getElementById("delete-confirm-message");
+const registerForm = document.getElementById("registrar-form");
+const registerMessage = document.getElementById("registrar-message");
 let currentUserType = null;
 let inventory = [];
 
@@ -33,6 +37,10 @@ function closeDrawer() {
 }
 
 function showView(name) {
+  if (name === "registrar" && currentUserType !== "ADMINISTRADOR") {
+    name = "inventario";
+  }
+
   const isLogin = name === "login";
   loginView.hidden = !isLogin;
   appShell.hidden = isLogin;
@@ -86,7 +94,13 @@ function showBoxQr(box) {
 
   try {
     new QRCode(qrCodeElement, {
-      text: `SantanDar\n${boxDetails.join("\n")}`,
+      text: JSON.stringify({
+        idCaja: box.idCaja,
+        identificadorQR: box.identificadorQR,
+        contenido: box.contenido,
+        zonaDestino: box.zonaDestino,
+        estadoCaja: box.estadoCaja
+      }),
       width: 256,
       height: 256,
       correctLevel: QRCode.CorrectLevel.L
@@ -97,18 +111,76 @@ function showBoxQr(box) {
   }
 }
 
+async function deleteBox(box, button) {
+  if (currentUserType !== "ADMINISTRADOR") return;
+  deleteConfirmMessage.textContent = `¿Seguro que deseas eliminar la caja ${box.idCaja}? Esta acción no se puede deshacer.`;
+  const confirmation = new Promise((resolve) => {
+    deleteConfirmDialog.addEventListener("close", () => {
+      resolve(deleteConfirmDialog.returnValue === "confirm");
+    }, { once: true });
+  });
+  deleteConfirmDialog.showModal();
+  const confirmed = await confirmation;
+  if (!confirmed) return;
+
+  button.disabled = true;
+  inventoryMessage.hidden = true;
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/cajas/${encodeURIComponent(box.idCaja)}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${sessionStorage.getItem("authToken")}` }
+    });
+
+    if (!response.ok) {
+      let message = `No fue posible eliminar la caja (HTTP ${response.status}).`;
+      try {
+        const result = await response.json();
+        message = result.mensaje || message;
+      } catch {
+        // Keep the HTTP status message when the server does not return JSON.
+      }
+
+      if (response.status === 401) message = "La sesión expiró. Inicia sesión nuevamente.";
+      if (response.status === 403) message = "Solo un administrador puede eliminar cajas.";
+      throw new Error(message);
+    }
+
+    inventory = inventory.filter((item) => item.idCaja !== box.idCaja);
+    inventoryTotal.textContent = String(inventory.length);
+    populateDestinationFilter();
+    renderInventory();
+    inventoryMessage.textContent = `La caja ${box.idCaja} fue eliminada.`;
+    inventoryMessage.hidden = false;
+  } catch (error) {
+    inventoryMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : "No fue posible eliminar la caja.";
+    inventoryMessage.hidden = false;
+  } finally {
+    button.disabled = false;
+  }
+}
+
 function addActionsCell(row, box) {
   const cell = document.createElement("td");
   const actions = document.createElement("div");
   actions.className = "row-actions";
 
-  ["Editar", "Eliminar"].forEach((label) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = label;
-    button.setAttribute("aria-label", `${label} ${box.idCaja}`);
-    actions.appendChild(button);
-  });
+  const editButton = document.createElement("button");
+  editButton.type = "button";
+  editButton.textContent = "Editar";
+  editButton.setAttribute("aria-label", `Editar ${box.idCaja}`);
+  actions.appendChild(editButton);
+
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.textContent = "Eliminar";
+  deleteButton.setAttribute("aria-label", `Eliminar ${box.idCaja}`);
+  deleteButton.addEventListener("click", () => deleteBox(box, deleteButton));
+  actions.appendChild(deleteButton);
 
   const qrButton = document.createElement("button");
   qrButton.type = "button";
@@ -207,6 +279,62 @@ async function loadInventory() {
   }
 }
 
+registerForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  registerMessage.hidden = true;
+
+  if (currentUserType !== "ADMINISTRADOR") {
+    showView("inventario");
+    return;
+  }
+
+  const submitButton = registerForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/cajas`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${sessionStorage.getItem("authToken")}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contenido: registerForm.elements.contenido.value.trim(),
+        zonaDestino: registerForm.elements.zonaDestino.value.trim()
+      })
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      const validationMessage = result.errores && Object.values(result.errores)[0];
+      registerMessage.textContent = response.status === 401
+        ? "La sesión expiró. Inicia sesión nuevamente."
+        : response.status === 403
+          ? "Solo un administrador puede registrar cajas."
+          : validationMessage || result.mensaje || "No fue posible registrar la caja.";
+      registerMessage.hidden = false;
+      return;
+    }
+
+    if (!result.idCaja || !result.identificadorQR) {
+      throw new Error("El servidor devolvió una caja sin identificador o código QR.");
+    }
+
+    registerForm.reset();
+    showView("inventario");
+    showBoxQr(result);
+  } catch (error) {
+    registerMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : "No fue posible registrar la caja.";
+    registerMessage.hidden = false;
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
 navToggle.addEventListener("click", () => {
   const open = !appShell.classList.contains("is-nav-open");
   appShell.classList.toggle("is-nav-open", open);
@@ -268,8 +396,10 @@ document.querySelectorAll(".nav-item").forEach((item) => {
 searchInput.addEventListener("input", renderInventory);
 destinationFilter.addEventListener("change", renderInventory);
 document.querySelector(".inventory-summary .btn-outline").addEventListener("click", () => showView("registrar"));
+deleteConfirmDialog.querySelector('[value="cancel"]').addEventListener("click", () => deleteConfirmDialog.close("cancel"));
+deleteConfirmDialog.querySelector('[value="confirm"]').addEventListener("click", () => deleteConfirmDialog.close("confirm"));
 
-document.querySelectorAll('form:not(#login-form):not([method="dialog"])').forEach((form) => {
+document.querySelectorAll('form:not(#login-form):not(#registrar-form):not([method="dialog"])').forEach((form) => {
   form.addEventListener("submit", (event) => event.preventDefault());
 });
 
