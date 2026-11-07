@@ -159,6 +159,18 @@
     </div>
   </div>
 
+  <dialog id="qr-dialog" class="qr-dialog" aria-labelledby="qr-title">
+    <form method="dialog">
+      <button class="qr-dialog-close" type="submit" aria-label="Cerrar">×</button>
+    </form>
+    <h2 id="qr-title">Código QR de la caja</h2>
+    <div id="qr-code" class="qr-code" role="img" aria-label="Código QR con los datos de la caja"></div>
+    <p id="qr-error" class="qr-error" role="alert" hidden></p>
+    <p id="qr-details" class="qr-details"></p>
+    <p class="qr-help">Al escanear el código se mostrarán estos datos de la caja.</p>
+  </dialog>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="resources/js/app.js"></script>
 </body>
 </html>

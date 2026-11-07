@@ -430,6 +430,51 @@ body.is-login { background: var(--green); }
 
 .row-actions button:hover { background: #f2f2f2; }
 
+.qr-dialog {
+  width: min(420px, calc(100% - 32px));
+  border: 0;
+  border-radius: 14px;
+  padding: 28px;
+  color: var(--ink);
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.qr-dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
+
+.qr-dialog h2 { margin: 0 32px 20px; font-size: 1.25rem; }
+
+.qr-dialog form { position: absolute; top: 10px; right: 12px; }
+
+.qr-dialog-close {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.qr-code {
+  display: grid;
+  min-height: 256px;
+  place-items: center;
+}
+
+.qr-code img,
+.qr-code canvas { max-width: 100%; }
+
+.qr-details {
+  margin: 18px 0 8px;
+  white-space: pre-line;
+  text-align: left;
+  line-height: 1.6;
+}
+
+.qr-help,
+.qr-error { margin: 8px 0 0; color: var(--muted); }
+
+.qr-error { color: #b42318; }
+
 .pagination {
   display: flex;
   justify-content: flex-end;

@@ -10,6 +10,10 @@ const inventoryMessage = document.getElementById("inventory-message");
 const inventoryTotal = document.getElementById("inventory-total");
 const searchInput = document.getElementById("buscar");
 const destinationFilter = document.getElementById("filtro-destino");
+const qrDialog = document.getElementById("qr-dialog");
+const qrCodeElement = document.getElementById("qr-code");
+const qrError = document.getElementById("qr-error");
+const qrDetails = document.getElementById("qr-details");
 let currentUserType = null;
 let inventory = [];
 
@@ -56,18 +60,62 @@ function addCell(row, value) {
   row.appendChild(cell);
 }
 
-function addActionsCell(row, boxId) {
+function showBoxQr(box) {
+  const statusLabels = {
+    DESPACHADO: "Despachado",
+    NO_DESPACHADO: "No despachado"
+  };
+  const boxDetails = [
+    `ID de caja: ${box.idCaja || "—"}`,
+    `Destino: ${box.zonaDestino || "—"}`,
+    `Contenido: ${box.contenido || "—"}`,
+    `Estado: ${statusLabels[box.estadoCaja] || box.estadoCaja || "Sin estado"}`,
+    `Código QR: ${box.identificadorQR || "—"}`
+  ];
+
+  qrCodeElement.replaceChildren();
+  qrError.hidden = true;
+  qrDetails.textContent = boxDetails.join("\n");
+  qrDialog.showModal();
+
+  if (typeof QRCode === "undefined") {
+    qrError.textContent = "No se pudo cargar la librería para generar el código QR.";
+    qrError.hidden = false;
+    return;
+  }
+
+  try {
+    new QRCode(qrCodeElement, {
+      text: `SantanDar\n${boxDetails.join("\n")}`,
+      width: 256,
+      height: 256,
+      correctLevel: QRCode.CorrectLevel.L
+    });
+  } catch {
+    qrError.textContent = "No fue posible generar el código QR de esta caja.";
+    qrError.hidden = false;
+  }
+}
+
+function addActionsCell(row, box) {
   const cell = document.createElement("td");
   const actions = document.createElement("div");
   actions.className = "row-actions";
 
-  ["Editar", "Eliminar", "Historial"].forEach((label) => {
+  ["Editar", "Eliminar"].forEach((label) => {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = label;
-    button.setAttribute("aria-label", `${label} ${boxId}`);
+    button.setAttribute("aria-label", `${label} ${box.idCaja}`);
     actions.appendChild(button);
   });
+
+  const qrButton = document.createElement("button");
+  qrButton.type = "button";
+  qrButton.textContent = "QR";
+  qrButton.setAttribute("aria-label", `Generar QR para ${box.idCaja}`);
+  qrButton.addEventListener("click", () => showBoxQr(box));
+  actions.appendChild(qrButton);
 
   cell.appendChild(actions);
   row.appendChild(cell);
@@ -107,7 +155,7 @@ function renderInventory() {
     statusCell.appendChild(status);
     row.appendChild(statusCell);
 
-    if (currentUserType === "ADMINISTRADOR") addActionsCell(row, box.idCaja);
+    if (currentUserType === "ADMINISTRADOR") addActionsCell(row, box);
     inventoryBody.appendChild(row);
   });
 
@@ -221,7 +269,7 @@ searchInput.addEventListener("input", renderInventory);
 destinationFilter.addEventListener("change", renderInventory);
 document.querySelector(".inventory-summary .btn-outline").addEventListener("click", () => showView("registrar"));
 
-document.querySelectorAll("form:not(#login-form)").forEach((form) => {
+document.querySelectorAll('form:not(#login-form):not([method="dialog"])').forEach((form) => {
   form.addEventListener("submit", (event) => event.preventDefault());
 });
 
