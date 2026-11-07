@@ -415,14 +415,17 @@ body.is-login { background: var(--green); }
 }
 
 .row-actions button {
-  width: 32px;
+  min-width: 32px;
   height: 32px;
+  padding: 0 8px;
   border: 0;
   background: transparent;
   color: #333;
   border-radius: 6px;
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 .row-actions button:hover { background: #f2f2f2; }

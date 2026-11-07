@@ -85,10 +85,10 @@
         <section class="app-view" data-app-view="inventario" hidden>
           <h2>Panel de Gestión de Inventario de SantanDar</h2>
           <div class="inventory-summary">
-            <button class="btn-outline" type="button">Añadir Nueva Caja</button>
+            <button class="btn-outline" type="button" data-admin-only hidden>Añadir Nueva Caja</button>
             <article class="stat-card">
               <p>Total de Cajas Registradas:</p>
-              <strong>312</strong>
+              <strong id="inventory-total">0</strong>
             </article>
           </div>
 
@@ -97,16 +97,12 @@
             <input id="buscar" class="search-input" type="search" name="q" placeholder="Buscar..." autocomplete="off">
             <label class="sr-only" for="filtro-destino">Filtro por destino</label>
             <select id="filtro-destino" name="zonaDestino">
-              <option selected>Filtro por Destino</option>
-              <option>Mocoa, Putumayo</option>
-              <option>Armero Guayabal, Tolima</option>
-              <option>Zona Rural, Cauca</option>
-              <option>Cúcuta, N. de Santander</option>
-              <option>Riosucio, Caldas</option>
+              <option value="">Todos los destinos</option>
             </select>
           </div>
 
           <div class="table-card">
+            <p id="inventory-message" role="status" aria-live="polite" hidden></p>
             <div class="table-scroll">
               <table class="inventory-table">
                 <thead>
@@ -115,86 +111,13 @@
                     <th scope="col">Destino</th>
                     <th scope="col">Contenido</th>
                     <th scope="col">Estado</th>
-                    <th scope="col">Acciones</th>
+                    <th id="inventory-actions-heading" scope="col" data-admin-only hidden>Acciones</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr>
-                    <td>CAJA-001</td>
-                    <td>Mocoa, Putumayo</td>
-                    <td>Alimentos no perecederos, Agua</td>
-                    <td><span class="status"><i class="dot dot--yellow"></i>En Tránsito</span></td>
-                    <td>
-                      <div class="row-actions">
-                        <button type="button" aria-label="Editar CAJA-001"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16.8V20h3.2L18.4 8.8l-3.2-3.2L4 16.8Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m13.6 7.2 3.2 3.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
-                        <button type="button" aria-label="Eliminar CAJA-001"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5h14M9.2 7.4V5.6h5.6v1.8M7.2 7.5l.7 11.2h8.2l.7-11.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
-                        <button type="button" aria-label="Historial de CAJA-001"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.2V12l3 1.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M5.2 12a6.8 6.8 0 1 0 1.6-4.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4.4 4.8v3.4h3.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>BOX-102</td>
-                    <td>Armero Guayabal, Tolima</td>
-                    <td>Kits de Higiene, Mantas</td>
-                    <td><span class="status"><i class="dot dot--gray"></i>Preparando</span></td>
-                    <td>
-                      <div class="row-actions">
-                        <button type="button" aria-label="Editar BOX-102"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16.8V20h3.2L18.4 8.8l-3.2-3.2L4 16.8Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m13.6 7.2 3.2 3.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
-                        <button type="button" aria-label="Eliminar BOX-102"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5h14M9.2 7.4V5.6h5.6v1.8M7.2 7.5l.7 11.2h8.2l.7-11.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
-                        <button type="button" aria-label="Historial de BOX-102"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.2V12l3 1.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M5.2 12a6.8 6.8 0 1 0 1.6-4.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4.4 4.8v3.4h3.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>AID-503</td>
-                    <td>Zona Rural, Cauca</td>
-                    <td>Ropa, Medicamentos básicos</td>
-                    <td><span class="status"><i class="dot dot--green"></i>Entregado</span></td>
-                    <td>
-                      <div class="row-actions">
-                        <button type="button" aria-label="Editar AID-503"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16.8V20h3.2L18.4 8.8l-3.2-3.2L4 16.8Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m13.6 7.2 3.2 3.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
-                        <button type="button" aria-label="Eliminar AID-503"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5h14M9.2 7.4V5.6h5.6v1.8M7.2 7.5l.7 11.2h8.2l.7-11.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
-                        <button type="button" aria-label="Historial de AID-503"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.2V12l3 1.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M5.2 12a6.8 6.8 0 1 0 1.6-4.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4.4 4.8v3.4h3.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>CAJA-002</td>
-                    <td>Cúcuta, N. de Santander</td>
-                    <td>Alimentos, Kits de Higiene</td>
-                    <td><span class="status"><i class="dot dot--red"></i>En Espera</span></td>
-                    <td>
-                      <div class="row-actions">
-                        <button type="button" aria-label="Editar CAJA-002"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16.8V20h3.2L18.4 8.8l-3.2-3.2L4 16.8Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m13.6 7.2 3.2 3.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
-                        <button type="button" aria-label="Eliminar CAJA-002"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5h14M9.2 7.4V5.6h5.6v1.8M7.2 7.5l.7 11.2h8.2l.7-11.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
-                        <button type="button" aria-label="Historial de CAJA-002"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.2V12l3 1.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M5.2 12a6.8 6.8 0 1 0 1.6-4.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4.4 4.8v3.4h3.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>BOX-103</td>
-                    <td>Riosucio, Caldas</td>
-                    <td>Mantas, Ropa, Agua</td>
-                    <td><span class="status"><i class="dot dot--gray"></i>Preparando</span></td>
-                    <td>
-                      <div class="row-actions">
-                        <button type="button" aria-label="Editar BOX-103"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16.8V20h3.2L18.4 8.8l-3.2-3.2L4 16.8Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m13.6 7.2 3.2 3.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
-                        <button type="button" aria-label="Eliminar BOX-103"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5h14M9.2 7.4V5.6h5.6v1.8M7.2 7.5l.7 11.2h8.2l.7-11.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
-                        <button type="button" aria-label="Historial de BOX-103"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.2V12l3 1.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M5.2 12a6.8 6.8 0 1 0 1.6-4.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4.4 4.8v3.4h3.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                      </div>
-                    </td>
-                  </tr>
+                <tbody id="inventory-body">
                 </tbody>
               </table>
             </div>
-            <nav class="pagination" aria-label="Páginas del inventario">
-              <button type="button">Anterior</button>
-              <button type="button" aria-current="page">1</button>
-              <button type="button">2</button>
-              <button type="button">3</button>
-              <button type="button" disabled>…</button>
-              <button type="button">Next</button>
-            </nav>
           </div>
         </section>
 

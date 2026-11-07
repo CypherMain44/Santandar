@@ -1,4 +1,6 @@
 package edu.uis.santandar_backend.dto.response;
 
-public record AuthResponse(String token) {
+import edu.uis.santandar_backend.dto.TipoUsuario;
+
+public record AuthResponse(String token, TipoUsuario tipo) {
 }

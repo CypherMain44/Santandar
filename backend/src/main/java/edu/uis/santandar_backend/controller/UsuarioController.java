@@ -2,12 +2,14 @@ package edu.uis.santandar_backend.controller;
 
 import java.util.List;
 
+import edu.uis.santandar_backend.config.JwtService;
+import edu.uis.santandar_backend.dto.TipoUsuario;
 import edu.uis.santandar_backend.dto.request.ActualizarUsuarioRequest;
 import edu.uis.santandar_backend.dto.request.LoginRequest;
 import edu.uis.santandar_backend.dto.request.RegistroUsuarioRequest;
 import edu.uis.santandar_backend.dto.response.AuthResponse;
 import edu.uis.santandar_backend.dto.response.UsuarioResponse;
-import edu.uis.santandar_backend.config.JwtService;
+import edu.uis.santandar_backend.model.Administrador;
 import edu.uis.santandar_backend.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +34,10 @@ public class UsuarioController {
         );
         var user = usuarioService.loadUserByUsername(request.correo());
         var jwtToken = jwtService.generateToken(user);
-        return new AuthResponse(jwtToken);
+        TipoUsuario tipo = user instanceof Administrador
+                ? TipoUsuario.ADMINISTRADOR
+                : TipoUsuario.VOLUNTARIO;
+        return new AuthResponse(jwtToken, tipo);
     }
 
     @PostMapping("/usuarios")

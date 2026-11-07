@@ -10,6 +10,7 @@ import edu.uis.santandar_backend.dto.response.AuthResponse;
 import edu.uis.santandar_backend.dto.response.UsuarioResponse;
 import edu.uis.santandar_backend.config.JwtService;
 import edu.uis.santandar_backend.model.Administrador;
+import edu.uis.santandar_backend.model.Voluntario;
 import edu.uis.santandar_backend.service.UsuarioService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,8 +65,17 @@ class UsuarioControllerTest {
         AuthResponse resultado = usuarioController.login(request);
 
         assertEquals("jwt-token", resultado.token());
+        assertEquals(TipoUsuario.ADMINISTRADOR, resultado.tipo());
+        assertEquals("ROLE_ADMINISTRADOR", usuario.getAuthorities().iterator().next().getAuthority());
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(usuarioService).loadUserByUsername("user@test.com");
+    }
+
+    @Test
+    void voluntario_DebeTenerAutoridadDeVoluntario() {
+        Voluntario usuario = Voluntario.builder().build();
+
+        assertEquals("ROLE_VOLUNTARIO", usuario.getAuthorities().iterator().next().getAuthority());
     }
 
     @Test
