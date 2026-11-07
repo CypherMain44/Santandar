@@ -1,15 +1,9 @@
-// TEMPORAL: eliminar cuando se conecten las rutas reales.
 // Este archivo solo cambia la vista visible. No envía datos ni llama a la API.
-
-const ORDER = ["login", "inicio", "inventario", "registrar", "despacho", "usuarios"];
 
 const loginView = document.getElementById("view-login");
 const appShell = document.getElementById("app-shell");
-const siguiente = document.getElementById("btn-siguiente");
 const navToggle = document.getElementById("nav-toggle");
 const navBackdrop = document.getElementById("nav-backdrop");
-
-let index = 0;
 
 function closeDrawer() {
   appShell.classList.remove("is-nav-open");
@@ -18,9 +12,6 @@ function closeDrawer() {
 }
 
 function showView(name) {
-  const position = ORDER.indexOf(name);
-  if (position >= 0) index = position;
-
   const isLogin = name === "login";
   loginView.hidden = !isLogin;
   appShell.hidden = isLogin;
@@ -39,11 +30,6 @@ function showView(name) {
 
   closeDrawer();
 }
-
-siguiente.addEventListener("click", () => {
-  index = (index + 1) % ORDER.length;
-  showView(ORDER[index]);
-});
 
 navToggle.addEventListener("click", () => {
   const open = !appShell.classList.contains("is-nav-open");

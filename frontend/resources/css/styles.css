@@ -505,22 +505,6 @@ body.is-login { background: var(--green); }
 
 .btn-pill:hover { background: #f7f7f7; }
 
-.btn-siguiente {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  z-index: 40;
-  border: 0;
-  background: #fff;
-  color: var(--green-ink);
-  border-radius: 999px;
-  padding: 12px 18px;
-  font-weight: 800;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
-}
-
-.btn-siguiente:hover { background: #f3faf6; }
-
 .nav-backdrop { display: none; }
 
 input:focus-visible,
