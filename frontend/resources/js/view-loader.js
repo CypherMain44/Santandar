@@ -17,15 +17,15 @@ async function loadViewFragments() {
 
     const documentFragment = new DOMParser().parseFromString(await response.text(), "text/html");
     const host = document.querySelector(target);
-    const elements = [...documentFragment.body.children];
-    if (!host || !elements.some((element) => element.matches(selector))) {
+    const elements = [...documentFragment.body.querySelectorAll(selector)];
+    if (!host || elements.length === 0) {
       throw new Error(`El fragmento ${path} no tiene el contenido esperado.`);
     }
-    return { host, elements };
+    return { host, elements: elements.map((element) => element.cloneNode(true)) };
   }));
 
   fragments.forEach(({ host, elements }) => {
-    host.replaceChildren(...elements.map((element) => element.cloneNode(true)));
+    host.replaceChildren(...elements);
   });
 
   const appScript = document.createElement("script");

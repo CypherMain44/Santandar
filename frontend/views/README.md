@@ -1,6 +1,6 @@
 # Vistas
 
-Cada pantalla vive en su propio fragmento HTML y se carga desde
+Cada pantalla vive en su propio archivo HTML y se carga desde
 [`../index.html`](../index.html) mediante
 [`../resources/js/view-loader.js`](../resources/js/view-loader.js):
 
@@ -14,8 +14,10 @@ Cada pantalla vive en su propio fragmento HTML y se carga desde
 
 Para agregar una pantalla:
 
-1. Crea `nombre.html` en esta carpeta con una sección `app-view` y un valor
-   único para `data-app-view`.
+1. Crea `nombre.html` como documento HTML completo con `<body>` y su cierre.
+   Dentro incluye una sección `app-view` con un valor único para
+   `data-app-view`. El documento completo permite que Live Server inserte su
+   script de recarga sin interrumpir el contenido de la vista.
 2. Agrega el fragmento a `VIEW_FRAGMENTS` en
    [`../resources/js/view-loader.js`](../resources/js/view-loader.js), junto
    con su contenedor `data-view-host` en `index.html`.
