@@ -19,13 +19,13 @@ public class BrevoCorreoVerificacionServiceImpl implements CorreoVerificacionSer
 
     private final RestClient.Builder restClientBuilder;
 
-    @Value("${app.brevo.api-key:}")
+    @Value("${BREVO_API_KEY:}")
     private String apiKey;
 
-    @Value("${app.brevo.sender-email:}")
+    @Value("${BREVO_SENDER_EMAIL:}")
     private String senderEmail;
 
-    @Value("${app.brevo.sender-name:SantanDar}")
+    @Value("${BREVO_SENDER_NAME:SantanDar}")
     private String senderName;
 
     @Override

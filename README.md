@@ -58,6 +58,10 @@ entorno y nunca guardarse en el repositorio. Brevo envía los códigos temporale
 de seis dígitos, válidos durante 10 minutos. La dirección remitente debe estar
 verificada en Brevo.
 
+Si configuras opciones locales de Spring, guárdalas en
+`backend/src/main/resources/application.properties`; ese archivo está excluido
+de Git para no publicar credenciales.
+
 En PowerShell, define las variables antes de iniciar el backend:
 
 ```powershell
