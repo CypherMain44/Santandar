@@ -2,6 +2,13 @@ const loginView = document.getElementById("view-login");
 const appShell = document.getElementById("app-shell");
 const loginForm = document.getElementById("login-form");
 const loginMessage = document.getElementById("login-message");
+const logoutButton = document.getElementById("logout-button");
+const showPasswordResetButton = document.getElementById("show-password-reset");
+const passwordResetPanel = document.getElementById("password-reset-panel");
+const passwordResetMessage = document.getElementById("password-reset-message");
+const passwordResetRequestForm = document.getElementById("password-reset-request-form");
+const passwordResetConfirmForm = document.getElementById("password-reset-confirm-form");
+const returnToLoginButton = document.getElementById("return-to-login");
 const navToggle = document.getElementById("nav-toggle");
 const navBackdrop = document.getElementById("nav-backdrop");
 const apiBaseUrl = document.querySelector('meta[name="api-base-url"]').content.replace(/\/$/, "");
@@ -912,6 +919,130 @@ loginForm.addEventListener("submit", async (event) => {
   }
 });
 
+function showLoginForm(message = "") {
+  passwordResetPanel.hidden = true;
+  showPasswordResetButton.hidden = false;
+  returnToLoginButton.hidden = true;
+  loginForm.hidden = false;
+  loginMessage.textContent = message;
+  loginMessage.hidden = !message;
+  passwordResetMessage.hidden = true;
+  passwordResetRequestForm.reset();
+  passwordResetConfirmForm.reset();
+  passwordResetRequestForm.hidden = false;
+  passwordResetConfirmForm.hidden = true;
+}
+
+showPasswordResetButton.addEventListener("click", () => {
+  loginMessage.hidden = true;
+  loginForm.hidden = true;
+  showPasswordResetButton.hidden = true;
+  passwordResetPanel.hidden = false;
+  returnToLoginButton.hidden = false;
+  passwordResetRequestForm.reset();
+  passwordResetConfirmForm.reset();
+  passwordResetRequestForm.hidden = false;
+  passwordResetConfirmForm.hidden = true;
+  passwordResetMessage.hidden = true;
+  passwordResetRequestForm.elements.correo.value = loginForm.elements.correo.value.trim();
+  passwordResetRequestForm.elements.correo.focus();
+});
+
+returnToLoginButton.addEventListener("click", () => showLoginForm());
+
+passwordResetRequestForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  passwordResetMessage.hidden = true;
+  const submitButton = passwordResetRequestForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+
+  const correo = passwordResetRequestForm.elements.correo.value.trim();
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/auth/password-reset/request`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ correo })
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      const validationMessage = result.errores && Object.values(result.errores)[0];
+      passwordResetMessage.textContent = validationMessage || result.mensaje
+        || "No fue posible solicitar el código.";
+      passwordResetMessage.hidden = false;
+      return;
+    }
+
+    passwordResetMessage.textContent = result.mensaje
+      || "Si el correo está registrado, recibirás un código de verificación.";
+    passwordResetMessage.hidden = false;
+    document.getElementById("reset-confirm-email").value = correo;
+    passwordResetRequestForm.hidden = true;
+    passwordResetConfirmForm.hidden = false;
+    passwordResetConfirmForm.elements.codigo.focus();
+  } catch (error) {
+    passwordResetMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : "No fue posible solicitar el código.";
+    passwordResetMessage.hidden = false;
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+passwordResetConfirmForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  passwordResetMessage.hidden = true;
+  const nuevaClave = passwordResetConfirmForm.elements.nuevaClave.value;
+  if (nuevaClave !== passwordResetConfirmForm.elements.confirmarClave.value) {
+    passwordResetMessage.textContent = "Las contraseñas no coinciden.";
+    passwordResetMessage.hidden = false;
+    return;
+  }
+
+  const submitButton = passwordResetConfirmForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/auth/password-reset/confirm`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        correo: passwordResetConfirmForm.elements.correo.value,
+        codigo: passwordResetConfirmForm.elements.codigo.value.trim(),
+        nuevaClave
+      })
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      const validationMessage = result.errores && Object.values(result.errores)[0];
+      passwordResetMessage.textContent = validationMessage || result.mensaje
+        || "No fue posible restablecer la contraseña.";
+      passwordResetMessage.hidden = false;
+      return;
+    }
+
+    loginForm.elements.correo.value = passwordResetConfirmForm.elements.correo.value;
+    showLoginForm(result.mensaje || "Contraseña restablecida. Inicia sesión con tu nueva clave.");
+  } catch (error) {
+    passwordResetMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : "No fue posible restablecer la contraseña.";
+    passwordResetMessage.hidden = false;
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+logoutButton.addEventListener("click", () => {
+  sessionStorage.removeItem("authToken");
+  currentUserType = null;
+  currentUserEmail = "";
+  inventory = [];
+  users = [];
+  closeDrawer();
+  showView("login");
+  showLoginForm();
+});
+
 document.querySelectorAll(".nav-item").forEach((item) => {
   item.addEventListener("click", () => showView(item.dataset.view));
 });
@@ -929,7 +1060,7 @@ dispatchConfirmDialog.querySelector('[value="confirm"]').addEventListener("click
 userDeleteConfirmDialog.querySelector('[value="cancel"]').addEventListener("click", () => userDeleteConfirmDialog.close("cancel"));
 userDeleteConfirmDialog.querySelector('[value="confirm"]').addEventListener("click", () => userDeleteConfirmDialog.close("confirm"));
 
-document.querySelectorAll('form:not(#login-form):not(#registrar-form):not(#edit-box-form):not(#user-form):not([method="dialog"])').forEach((form) => {
+document.querySelectorAll('form:not(#login-form):not(#password-reset-request-form):not(#password-reset-confirm-form):not(#registrar-form):not(#edit-box-form):not(#user-form):not([method="dialog"])').forEach((form) => {
   form.addEventListener("submit", (event) => event.preventDefault());
 });
 

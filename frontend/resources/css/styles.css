@@ -167,20 +167,33 @@ body.is-login { background: var(--green); }
   opacity: 0.7;
 }
 
-.login-links {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 14px;
-  font-size: 0.95rem;
-}
-
-.login-links a {
+.login-recovery-link {
+  display: block;
+  margin: 14px auto 0;
+  border: 0;
+  padding: 4px 8px;
+  background: transparent;
   color: var(--link);
-  text-decoration: none;
+  text-decoration: underline;
 }
 
-.login-links a:hover { text-decoration: underline; }
+.login-recovery-link:hover { color: #b6e0cb; }
+
+.password-reset-panel {
+  width: 100%;
+  margin-top: 14px;
+  text-align: center;
+}
+
+.password-reset-panel h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.25rem;
+}
+
+.password-reset-panel .login-form { margin-top: 14px; }
+
+.password-reset-panel .login-message { line-height: 1.4; }
 
 .app-shell {
   min-height: 100vh;
@@ -236,6 +249,8 @@ body.is-login { background: var(--green); }
 .sidebar {
   width: var(--sidebar-w);
   flex: none;
+  display: flex;
+  flex-direction: column;
   background: #fff;
   border-right: 1px solid rgba(0, 0, 0, 0.04);
 }
@@ -268,6 +283,29 @@ body.is-login { background: var(--green); }
   color: #161616;
   background: #f6f7f5;
 }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 12px;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  border: 1.5px solid var(--green);
+  border-radius: 8px;
+  padding: 11px 12px;
+  background: #fff;
+  color: var(--green-ink);
+  font-weight: 600;
+}
+
+.logout-button:hover { background: #f3faf6; }
+
+.logout-button svg { width: 20px; height: 20px; flex: none; }
 
 .app-main {
   flex: 1;
@@ -968,7 +1006,6 @@ a:focus-visible {
 }
 
 @media (max-width: 520px) {
-  .login-links { font-size: 0.88rem; }
   .stat-card { width: 100%; }
   .btn-outline { width: 100%; }
   .dashboard-card { padding: 16px; }

@@ -4,14 +4,18 @@ import java.util.List;
 
 import edu.uis.santandar_backend.dto.TipoUsuario;
 import edu.uis.santandar_backend.dto.request.ActualizarUsuarioRequest;
+import edu.uis.santandar_backend.dto.request.ConfirmarRestablecimientoRequest;
 import edu.uis.santandar_backend.dto.request.LoginRequest;
 import edu.uis.santandar_backend.dto.request.RegistroUsuarioRequest;
+import edu.uis.santandar_backend.dto.request.SolicitarRestablecimientoRequest;
 import edu.uis.santandar_backend.dto.response.AuthResponse;
+import edu.uis.santandar_backend.dto.response.RestablecimientoResponse;
 import edu.uis.santandar_backend.dto.response.UsuarioResponse;
 import edu.uis.santandar_backend.config.JwtService;
 import edu.uis.santandar_backend.model.Administrador;
 import edu.uis.santandar_backend.model.Voluntario;
 import edu.uis.santandar_backend.service.UsuarioService;
+import edu.uis.santandar_backend.service.RestablecimientoClaveService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +42,9 @@ class UsuarioControllerTest {
 
     @Mock
     private JwtService jwtService;
+
+    @Mock
+    private RestablecimientoClaveService restablecimientoClaveService;
 
     @InjectMocks
     private UsuarioController usuarioController;
@@ -69,6 +76,27 @@ class UsuarioControllerTest {
         assertEquals("ROLE_ADMINISTRADOR", usuario.getAuthorities().iterator().next().getAuthority());
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(usuarioService).loadUserByUsername("user@test.com");
+    }
+
+    @Test
+    void solicitarRestablecimiento_DebeDelegarAlServicioYNoRevelarLaCuenta() {
+        SolicitarRestablecimientoRequest request = new SolicitarRestablecimientoRequest("user@test.com");
+
+        RestablecimientoResponse resultado = usuarioController.solicitarRestablecimiento(request);
+
+        assertEquals("Si el correo está registrado, recibirás un código de verificación.", resultado.mensaje());
+        verify(restablecimientoClaveService).solicitar(request);
+    }
+
+    @Test
+    void confirmarRestablecimiento_DebeDelegarAlServicio() {
+        ConfirmarRestablecimientoRequest request = new ConfirmarRestablecimientoRequest(
+                "user@test.com", "123456", "new-password");
+
+        RestablecimientoResponse resultado = usuarioController.confirmarRestablecimiento(request);
+
+        assertEquals("La contraseña se restableció correctamente.", resultado.mensaje());
+        verify(restablecimientoClaveService).confirmar(request);
     }
 
     @Test

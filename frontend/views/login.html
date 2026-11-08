@@ -25,11 +25,39 @@
         </div>
         <p id="login-message" class="login-message" role="alert" hidden></p>
         <button class="btn-login" type="submit">LOGIN</button>
-        <div class="login-links">
-          <a href="#registro" data-visual-only>Register</a>
-          <a href="#recuperar" data-visual-only>Forgot password?</a>
-        </div>
       </form>
+
+      <button id="show-password-reset" class="login-recovery-link" type="button">¿Olvidaste tu contraseña?</button>
+
+      <section id="password-reset-panel" class="password-reset-panel" aria-labelledby="password-reset-title" hidden>
+        <h2 id="password-reset-title">Recuperar contraseña</h2>
+        <p id="password-reset-message" class="login-message" role="status" aria-live="polite" hidden></p>
+        <form id="password-reset-request-form" class="login-form" action="#" method="post">
+          <label class="sr-only" for="reset-request-email">Correo de la cuenta</label>
+          <div class="login-field">
+            <input id="reset-request-email" name="correo" type="email" placeholder="CORREO" autocomplete="email" required>
+          </div>
+          <button class="btn-login" type="submit">ENVIAR CÓDIGO</button>
+        </form>
+        <form id="password-reset-confirm-form" class="login-form" action="#" method="post" hidden>
+          <input id="reset-confirm-email" name="correo" type="hidden">
+          <label class="sr-only" for="reset-code">Código de verificación</label>
+          <div class="login-field">
+            <input id="reset-code" name="codigo" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="CÓDIGO DE 6 DÍGITOS" autocomplete="one-time-code" required>
+          </div>
+          <label class="sr-only" for="reset-new-password">Nueva contraseña</label>
+          <div class="login-field">
+            <input id="reset-new-password" name="nuevaClave" type="password" minlength="8" placeholder="NUEVA CONTRASEÑA" autocomplete="new-password" required>
+          </div>
+          <label class="sr-only" for="reset-confirm-password">Confirmar nueva contraseña</label>
+          <div class="login-field">
+            <input id="reset-confirm-password" name="confirmarClave" type="password" minlength="8" placeholder="CONFIRMAR CONTRASEÑA" autocomplete="new-password" required>
+          </div>
+          <button class="btn-login" type="submit">CAMBIAR CONTRASEÑA</button>
+        </form>
+      </section>
+
+      <button id="return-to-login" class="login-recovery-link" type="button" hidden>Volver a iniciar sesión</button>
     </div>
   </section>
 </body>

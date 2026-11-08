@@ -7,10 +7,14 @@ import edu.uis.santandar_backend.dto.TipoUsuario;
 import edu.uis.santandar_backend.dto.request.ActualizarUsuarioRequest;
 import edu.uis.santandar_backend.dto.request.LoginRequest;
 import edu.uis.santandar_backend.dto.request.RegistroUsuarioRequest;
+import edu.uis.santandar_backend.dto.request.SolicitarRestablecimientoRequest;
+import edu.uis.santandar_backend.dto.request.ConfirmarRestablecimientoRequest;
 import edu.uis.santandar_backend.dto.response.AuthResponse;
+import edu.uis.santandar_backend.dto.response.RestablecimientoResponse;
 import edu.uis.santandar_backend.dto.response.UsuarioResponse;
 import edu.uis.santandar_backend.model.Administrador;
 import edu.uis.santandar_backend.service.UsuarioService;
+import edu.uis.santandar_backend.service.RestablecimientoClaveService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,6 +30,7 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final RestablecimientoClaveService restablecimientoClaveService;
 
     @PostMapping("/auth/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
@@ -38,6 +43,24 @@ public class UsuarioController {
                 ? TipoUsuario.ADMINISTRADOR
                 : TipoUsuario.VOLUNTARIO;
         return new AuthResponse(jwtToken, tipo);
+    }
+
+    @PostMapping("/auth/password-reset/request")
+    public RestablecimientoResponse solicitarRestablecimiento(
+            @Valid @RequestBody SolicitarRestablecimientoRequest request
+    ) {
+        restablecimientoClaveService.solicitar(request);
+        return new RestablecimientoResponse(
+                "Si el correo está registrado, recibirás un código de verificación."
+        );
+    }
+
+    @PostMapping("/auth/password-reset/confirm")
+    public RestablecimientoResponse confirmarRestablecimiento(
+            @Valid @RequestBody ConfirmarRestablecimientoRequest request
+    ) {
+        restablecimientoClaveService.confirmar(request);
+        return new RestablecimientoResponse("La contraseña se restableció correctamente.");
     }
 
     @PostMapping("/usuarios")

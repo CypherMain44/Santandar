@@ -9,5 +9,7 @@ public interface UsuarioRepository extends MongoRepository<Usuario, String> {
 
     Optional<Usuario> findByCorreo(String correo);
 
+    Optional<Usuario> findByCorreoIgnoreCase(String correo);
+
     boolean existsByCorreo(String correo);
 }
