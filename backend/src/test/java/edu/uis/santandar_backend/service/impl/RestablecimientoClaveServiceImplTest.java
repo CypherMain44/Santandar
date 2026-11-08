@@ -2,8 +2,6 @@ package edu.uis.santandar_backend.service.impl;
 
 import java.time.Instant;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import edu.uis.santandar_backend.dto.request.ConfirmarRestablecimientoRequest;
 import edu.uis.santandar_backend.dto.request.SolicitarRestablecimientoRequest;
@@ -12,21 +10,16 @@ import edu.uis.santandar_backend.model.CodigoRestablecimiento;
 import edu.uis.santandar_backend.model.Voluntario;
 import edu.uis.santandar_backend.repository.CodigoRestablecimientoRepository;
 import edu.uis.santandar_backend.repository.UsuarioRepository;
-import org.junit.jupiter.api.BeforeEach;
+import edu.uis.santandar_backend.service.CorreoVerificacionService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -46,18 +39,10 @@ class RestablecimientoClaveServiceImplTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private ObjectProvider<JavaMailSender> mailSenderProvider;
-
-    @Mock
-    private JavaMailSender mailSender;
+    private CorreoVerificacionService correoVerificacionService;
 
     @InjectMocks
     private RestablecimientoClaveServiceImpl service;
-
-    @BeforeEach
-    void setUp() {
-        ReflectionTestUtils.setField(service, "fromAddress", "no-reply@test.com");
-    }
 
     @Test
     void solicitar_CorreoRegistrado_EnviaCodigoDeUnSoloUso() {
@@ -65,22 +50,18 @@ class RestablecimientoClaveServiceImplTest {
                 .thenReturn(Optional.of(Voluntario.builder().correo("user@test.com").build()));
         when(codigoRepository.findById("user@test.com")).thenReturn(Optional.empty());
         when(passwordEncoder.encode(any(String.class))).thenReturn("codigo-hash");
-        when(mailSenderProvider.getIfAvailable()).thenReturn(mailSender);
         SolicitarRestablecimientoRequest request = new SolicitarRestablecimientoRequest(" User@Test.com ");
 
         service.solicitar(request);
 
-        ArgumentCaptor<SimpleMailMessage> mailCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(mailSender).send(mailCaptor.capture());
-        String text = mailCaptor.getValue().getText();
-        Matcher code = Pattern.compile("\\d{6}").matcher(text);
-        assertNotNull(text);
-        org.junit.jupiter.api.Assertions.assertTrue(code.find());
         ArgumentCaptor<CodigoRestablecimiento> codeCaptor = ArgumentCaptor.forClass(CodigoRestablecimiento.class);
         verify(codigoRepository).save(codeCaptor.capture());
         assertEquals("user@test.com", codeCaptor.getValue().getCorreo());
         assertEquals("codigo-hash", codeCaptor.getValue().getCodigoHash());
-        assertEquals("user@test.com", mailCaptor.getValue().getTo()[0]);
+        verify(correoVerificacionService).enviarCodigoRestablecimiento(
+                org.mockito.ArgumentMatchers.eq("user@test.com"),
+                org.mockito.ArgumentMatchers.matches("\\d{6}")
+        );
     }
 
     @Test
@@ -89,7 +70,7 @@ class RestablecimientoClaveServiceImplTest {
 
         service.solicitar(new SolicitarRestablecimientoRequest("missing@test.com"));
 
-        verify(mailSender, never()).send(any(SimpleMailMessage.class));
+        verify(correoVerificacionService, never()).enviarCodigoRestablecimiento(any(), any());
         verify(codigoRepository, never()).save(any(CodigoRestablecimiento.class));
     }
 
@@ -105,7 +86,7 @@ class RestablecimientoClaveServiceImplTest {
 
         service.solicitar(new SolicitarRestablecimientoRequest("user@test.com"));
 
-        verify(mailSender, never()).send(any(SimpleMailMessage.class));
+        verify(correoVerificacionService, never()).enviarCodigoRestablecimiento(any(), any());
     }
 
     @Test

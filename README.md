@@ -51,31 +51,23 @@ Define estas variables en tu computador o en la configuración de ejecución del
 |---|---|
 | `MONGODB_URI` | Cadena de conexión de MongoDB Atlas (con el nombre de la base de datos `santandar`) |
 | `JWT_SECRET` | Texto aleatorio de mínimo 32 caracteres (cuando se implemente la seguridad) |
-| `SMTP_HOST` | Servidor SMTP que enviará los códigos de recuperación |
-| `SMTP_PORT` | Puerto SMTP (por defecto `587`) |
-| `SMTP_USERNAME` | Usuario SMTP |
-| `SMTP_PASSWORD` | Contraseña o clave de aplicación SMTP |
-| `SMTP_FROM` | Dirección remitente aceptada por el proveedor SMTP |
+| `BREVO_API_KEY` | Clave de API de Brevo para enviar correos transaccionales |
+| `BREVO_SENDER_EMAIL` | Dirección remitente verificada en Brevo |
+| `BREVO_SENDER_NAME` | Nombre visible del remitente (por defecto `SantanDar`) |
 
-Las credenciales SMTP deben configurarse como variables de entorno y nunca
-guardarse en el repositorio. La recuperación de contraseña envía un código
-temporal de seis dígitos, válido durante 10 minutos.
+La clave de API y la dirección remitente deben configurarse como variables de
+entorno y nunca guardarse en el repositorio. Brevo envía los códigos temporales
+de seis dígitos, válidos durante 10 minutos. La dirección remitente debe estar
+verificada en Brevo.
 
-En PowerShell, define las variables antes de iniciar el backend (usa una
-contraseña de aplicación si tu proveedor la requiere):
+En PowerShell, define las variables antes de iniciar el backend:
 
 ```powershell
-$env:SMTP_HOST = "smtp.example.com"
-$env:SMTP_PORT = "587"
-$env:SMTP_USERNAME = "cuenta-remitente@example.com"
-$env:SMTP_PASSWORD = "tu-clave-smtp"
-$env:SMTP_FROM = "cuenta-remitente@example.com"
-.\mvnw.cmd spring-boot:run
+$env:BREVO_API_KEY = "tu-clave-de-api-de-brevo"
+$env:BREVO_SENDER_EMAIL = "cuenta-remitente@example.com"
+$env:BREVO_SENDER_NAME = "SantanDar"
+.\backend\mvnw.cmd -f backend\pom.xml spring-boot:run
 ```
-
-Si no configuras SMTP, el backend puede iniciar, pero no podrá enviar códigos
-de recuperación.
-
 
 ### 3. Ejecutar
 
