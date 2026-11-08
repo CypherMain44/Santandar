@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"></head>
+<body>
+<section class="app-view" data-app-view="usuarios" hidden>
+          <h2>Usuarios</h2>
+          <div class="users-layout">
+            <article class="user-register-card">
+              <h3>Agregar voluntario</h3>
+              <p id="users-form-message" class="users-message" role="status" aria-live="polite" hidden></p>
+              <form id="user-form" class="user-form" action="#" method="post">
+                <label for="user-email">Correo</label>
+                <input id="user-email" name="correo" type="email" autocomplete="email" required>
+                <label for="user-password">Contraseña</label>
+                <input id="user-password" name="clave" type="password" minlength="8" autocomplete="new-password" required>
+                <button class="btn-pill" type="submit">Agregar voluntario</button>
+              </form>
+            </article>
+
+            <div class="table-card users-table-card">
+              <p id="users-message" role="status" aria-live="polite" hidden></p>
+              <div class="table-scroll">
+                <table class="inventory-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Correo</th>
+                      <th scope="col">Tipo de usuario</th>
+                      <th scope="col">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="users-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+</body>
+</html>

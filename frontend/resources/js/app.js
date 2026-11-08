@@ -1,0 +1,1071 @@
+const loginView = document.getElementById("view-login");
+const appShell = document.getElementById("app-shell");
+const loginForm = document.getElementById("login-form");
+const loginMessage = document.getElementById("login-message");
+const logoutButton = document.getElementById("logout-button");
+const showPasswordResetButton = document.getElementById("show-password-reset");
+const passwordResetPanel = document.getElementById("password-reset-panel");
+const passwordResetMessage = document.getElementById("password-reset-message");
+const passwordResetRequestForm = document.getElementById("password-reset-request-form");
+const passwordResetConfirmForm = document.getElementById("password-reset-confirm-form");
+const returnToLoginButton = document.getElementById("return-to-login");
+const navToggle = document.getElementById("nav-toggle");
+const navBackdrop = document.getElementById("nav-backdrop");
+const apiBaseUrl = document.querySelector('meta[name="api-base-url"]').content.replace(/\/$/, "");
+const inventoryBody = document.getElementById("inventory-body");
+const inventoryMessage = document.getElementById("inventory-message");
+const inventoryTotal = document.getElementById("inventory-total");
+const searchInput = document.getElementById("buscar");
+const destinationFilter = document.getElementById("filtro-destino");
+const dispatchBody = document.getElementById("dispatch-body");
+const dispatchMessage = document.getElementById("dispatch-message");
+const dispatchSearchInput = document.getElementById("dispatch-search");
+const dispatchDestinationFilter = document.getElementById("dispatch-destination");
+const dispatchTotalDone = document.getElementById("dispatch-total-done");
+const dispatchTotalPending = document.getElementById("dispatch-total-pending");
+const dispatchAllButton = document.getElementById("dispatch-all");
+const dashboardUserEmail = document.getElementById("dashboard-user-email");
+const dashboardMessage = document.getElementById("dashboard-message");
+const dashboardPie = document.getElementById("dashboard-pie");
+const dashboardPieTotal = document.getElementById("dashboard-pie-total");
+const dashboardDoneCount = document.getElementById("dashboard-done-count");
+const dashboardPendingCount = document.getElementById("dashboard-pending-count");
+const dashboardZonesChart = document.getElementById("dashboard-zones-chart");
+const dashboardZonesEmpty = document.getElementById("dashboard-zones-empty");
+const qrDialog = document.getElementById("qr-dialog");
+const qrCodeElement = document.getElementById("qr-code");
+const qrError = document.getElementById("qr-error");
+const qrDetails = document.getElementById("qr-details");
+const deleteConfirmDialog = document.getElementById("delete-confirm-dialog");
+const deleteConfirmMessage = document.getElementById("delete-confirm-message");
+const dispatchConfirmDialog = document.getElementById("dispatch-confirm-dialog");
+const dispatchConfirmMessage = document.getElementById("dispatch-confirm-message");
+const editBoxDialog = document.getElementById("edit-box-dialog");
+const editBoxForm = document.getElementById("edit-box-form");
+const editBoxMessage = document.getElementById("edit-box-message");
+const registerForm = document.getElementById("registrar-form");
+const registerMessage = document.getElementById("registrar-message");
+const userForm = document.getElementById("user-form");
+const userFormMessage = document.getElementById("users-form-message");
+const usersBody = document.getElementById("users-body");
+const usersMessage = document.getElementById("users-message");
+const userDeleteConfirmDialog = document.getElementById("user-delete-confirm-dialog");
+const userDeleteConfirmMessage = document.getElementById("user-delete-confirm-message");
+let currentUserType = null;
+let currentUserEmail = "";
+let inventory = [];
+let users = [];
+let editingBoxId = null;
+
+inventoryBody.replaceChildren();
+dispatchBody.replaceChildren();
+
+function updateAdminControls() {
+  const isAdministrator = currentUserType === "ADMINISTRADOR";
+  document.querySelectorAll("[data-admin-only]").forEach((element) => {
+    element.hidden = !isAdministrator;
+  });
+}
+
+function closeDrawer() {
+  appShell.classList.remove("is-nav-open");
+  navToggle.setAttribute("aria-expanded", "false");
+  navBackdrop.hidden = true;
+}
+
+function showView(name) {
+  if (name === "registrar" && currentUserType !== "ADMINISTRADOR") {
+    name = "inventario";
+  }
+  if (name === "usuarios" && currentUserType !== "ADMINISTRADOR") {
+    name = "inicio";
+  }
+
+  const isLogin = name === "login";
+  loginView.hidden = !isLogin;
+  appShell.hidden = isLogin;
+  document.body.classList.toggle("is-login", isLogin);
+
+  document.querySelectorAll("[data-app-view]").forEach((section) => {
+    section.hidden = section.dataset.appView !== name;
+  });
+
+  document.querySelectorAll(".nav-item").forEach((item) => {
+    const active = item.dataset.view === name || (name === "registrar" && item.dataset.view === "inventario");
+    item.classList.toggle("is-active", active);
+    if (active) item.setAttribute("aria-current", "page");
+    else item.removeAttribute("aria-current");
+  });
+
+  updateAdminControls();
+  if (name === "inicio") {
+    dashboardUserEmail.textContent = currentUserEmail;
+    loadInventory();
+  }
+  if (name === "inventario" || name === "despacho") loadInventory();
+  if (name === "usuarios") loadUsers();
+  closeDrawer();
+}
+
+function addCell(row, value) {
+  const cell = document.createElement("td");
+  cell.textContent = value || "—";
+  row.appendChild(cell);
+}
+
+function showBoxQr(box) {
+  const statusLabels = {
+    DESPACHADO: "Despachado",
+    NO_DESPACHADO: "No despachado"
+  };
+  const boxDetails = [
+    `ID de caja: ${box.idCaja || "—"}`,
+    `Destino: ${box.zonaDestino || "—"}`,
+    `Contenido: ${box.contenido || "—"}`,
+    `Estado: ${statusLabels[box.estadoCaja] || box.estadoCaja || "Sin estado"}`,
+    `Código QR: ${box.identificadorQR || "—"}`
+  ];
+
+  qrCodeElement.replaceChildren();
+  qrError.hidden = true;
+  qrDetails.textContent = boxDetails.join("\n");
+  qrDialog.showModal();
+
+  if (typeof QRCode === "undefined") {
+    qrError.textContent = "No se pudo cargar la librería para generar el código QR.";
+    qrError.hidden = false;
+    return;
+  }
+
+  try {
+    new QRCode(qrCodeElement, {
+      text: JSON.stringify({
+        idCaja: box.idCaja,
+        identificadorQR: box.identificadorQR,
+        contenido: box.contenido,
+        zonaDestino: box.zonaDestino,
+        estadoCaja: box.estadoCaja
+      }),
+      width: 256,
+      height: 256,
+      correctLevel: QRCode.CorrectLevel.L
+    });
+  } catch {
+    qrError.textContent = "No fue posible generar el código QR de esta caja.";
+    qrError.hidden = false;
+  }
+}
+
+async function deleteBox(box, button) {
+  if (currentUserType !== "ADMINISTRADOR") return;
+  deleteConfirmMessage.textContent = `¿Seguro que deseas eliminar la caja ${box.idCaja}? Esta acción no se puede deshacer.`;
+  const confirmation = new Promise((resolve) => {
+    deleteConfirmDialog.addEventListener("close", () => {
+      resolve(deleteConfirmDialog.returnValue === "confirm");
+    }, { once: true });
+  });
+  deleteConfirmDialog.showModal();
+  const confirmed = await confirmation;
+  if (!confirmed) return;
+
+  button.disabled = true;
+  inventoryMessage.hidden = true;
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/cajas/${encodeURIComponent(box.idCaja)}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${sessionStorage.getItem("authToken")}` }
+    });
+
+    if (!response.ok) {
+      let message = `No fue posible eliminar la caja (HTTP ${response.status}).`;
+      try {
+        const result = await response.json();
+        message = result.mensaje || message;
+      } catch {
+        // Keep the HTTP status message when the server does not return JSON.
+      }
+
+      if (response.status === 401) message = "La sesión expiró. Inicia sesión nuevamente.";
+      if (response.status === 403) message = "Solo un administrador puede eliminar cajas.";
+      throw new Error(message);
+    }
+
+    inventory = inventory.filter((item) => item.idCaja !== box.idCaja);
+    inventoryTotal.textContent = String(inventory.length);
+    populateDestinationFilter();
+    renderInventory();
+    inventoryMessage.textContent = `La caja ${box.idCaja} fue eliminada.`;
+    inventoryMessage.hidden = false;
+  } catch (error) {
+    inventoryMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : "No fue posible eliminar la caja.";
+    inventoryMessage.hidden = false;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function addActionsCell(row, box) {
+  const cell = document.createElement("td");
+  const actions = document.createElement("div");
+  actions.className = "row-actions";
+
+  const editButton = document.createElement("button");
+  editButton.type = "button";
+  editButton.textContent = "Editar";
+  editButton.setAttribute("aria-label", `Editar ${box.idCaja}`);
+  editButton.addEventListener("click", () => openEditBox(box));
+  actions.appendChild(editButton);
+
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.textContent = "Eliminar";
+  deleteButton.setAttribute("aria-label", `Eliminar ${box.idCaja}`);
+  deleteButton.addEventListener("click", () => deleteBox(box, deleteButton));
+  actions.appendChild(deleteButton);
+
+  const qrButton = document.createElement("button");
+  qrButton.type = "button";
+  qrButton.textContent = "QR";
+  qrButton.setAttribute("aria-label", `Generar QR para ${box.idCaja}`);
+  qrButton.addEventListener("click", () => showBoxQr(box));
+  actions.appendChild(qrButton);
+
+  cell.appendChild(actions);
+  row.appendChild(cell);
+}
+
+function openEditBox(box) {
+  if (currentUserType !== "ADMINISTRADOR") return;
+
+  editingBoxId = box.idCaja;
+  editBoxForm.elements.contenido.value = box.contenido || "";
+  editBoxForm.elements.zonaDestino.value = box.zonaDestino || "";
+  editBoxMessage.hidden = true;
+  editBoxDialog.showModal();
+  editBoxForm.elements.contenido.focus();
+}
+
+editBoxForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  editBoxMessage.hidden = true;
+
+  if (currentUserType !== "ADMINISTRADOR" || !editingBoxId) {
+    editBoxDialog.close();
+    return;
+  }
+
+  const submitButton = editBoxForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/cajas/${encodeURIComponent(editingBoxId)}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${sessionStorage.getItem("authToken")}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contenido: editBoxForm.elements.contenido.value.trim(),
+        zonaDestino: editBoxForm.elements.zonaDestino.value.trim()
+      })
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      const validationMessage = result.errores && Object.values(result.errores)[0];
+      editBoxMessage.textContent = response.status === 401
+        ? "La sesión expiró. Inicia sesión nuevamente."
+        : response.status === 403
+          ? "Solo un administrador puede editar cajas."
+          : validationMessage || result.mensaje || "No fue posible actualizar la caja.";
+      editBoxMessage.hidden = false;
+      return;
+    }
+
+    if (result.idCaja !== editingBoxId) {
+      throw new Error("El servidor devolvió una caja distinta a la editada.");
+    }
+
+    inventory = inventory.map((box) => box.idCaja === editingBoxId ? result : box);
+    const updatedBoxId = editingBoxId;
+    editBoxDialog.close();
+    populateDestinationFilter();
+    renderInventory();
+    inventoryMessage.textContent = `La caja ${updatedBoxId} fue actualizada.`;
+    inventoryMessage.hidden = false;
+  } catch (error) {
+    editBoxMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : "No fue posible actualizar la caja.";
+    editBoxMessage.hidden = false;
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+editBoxDialog.querySelector('[value="cancel"]').addEventListener("click", () => editBoxDialog.close());
+editBoxDialog.addEventListener("close", () => {
+  editingBoxId = null;
+  editBoxForm.reset();
+});
+
+function renderInventory() {
+  const search = searchInput.value.trim().toLocaleLowerCase();
+  const destination = destinationFilter.value;
+  const filteredBoxes = filterBoxes(search, destination);
+
+  inventoryBody.replaceChildren();
+  filteredBoxes.forEach((box) => {
+    const row = document.createElement("tr");
+    addCell(row, box.idCaja);
+    addCell(row, box.zonaDestino);
+    addCell(row, box.contenido);
+    addStatusCell(row, box);
+
+    if (currentUserType === "ADMINISTRADOR") addActionsCell(row, box);
+    inventoryBody.appendChild(row);
+  });
+
+  inventoryMessage.textContent = inventory.length === 0
+    ? "No hay cajas registradas."
+    : filteredBoxes.length === 0
+      ? "No hay cajas que coincidan con la búsqueda."
+      : "";
+  inventoryMessage.hidden = filteredBoxes.length > 0;
+}
+
+function filterBoxes(search, destination) {
+  return inventory.filter((box) => {
+    const matchesSearch = [box.idCaja, box.zonaDestino, box.contenido, box.estadoCaja]
+      .some((value) => String(value || "").toLocaleLowerCase().includes(search));
+    return matchesSearch && (!destination || box.zonaDestino === destination);
+  });
+}
+
+function addStatusCell(row, box) {
+  const statusCell = document.createElement("td");
+  const status = document.createElement("span");
+  const dot = document.createElement("i");
+  const statusLabels = {
+    DESPACHADO: { label: "Despachado", dot: "dot--green" },
+    NO_DESPACHADO: { label: "No despachado", dot: "dot--yellow" }
+  };
+  const statusInfo = statusLabels[box.estadoCaja] || {
+    label: box.estadoCaja || "Sin estado",
+    dot: "dot--gray"
+  };
+  status.className = "status";
+  dot.className = `dot ${statusInfo.dot}`;
+  dot.setAttribute("aria-hidden", "true");
+  status.append(dot, document.createTextNode(statusInfo.label));
+  statusCell.appendChild(status);
+  row.appendChild(statusCell);
+}
+
+function renderDispatch() {
+  const search = dispatchSearchInput.value.trim().toLocaleLowerCase();
+  const destination = dispatchDestinationFilter.value;
+  const filteredBoxes = filterBoxes(search, destination)
+    .filter((box) => box.estadoCaja === "NO_DESPACHADO");
+
+  dispatchBody.replaceChildren();
+  filteredBoxes.forEach((box) => {
+    const row = document.createElement("tr");
+    addCell(row, box.idCaja);
+    addCell(row, box.zonaDestino);
+    addCell(row, box.contenido);
+    addStatusCell(row, box);
+
+    if (currentUserType === "ADMINISTRADOR") {
+      const cell = document.createElement("td");
+      const actions = document.createElement("div");
+      actions.className = "row-actions";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = "Despachar caja";
+      button.setAttribute("aria-label", `Despachar caja ${box.idCaja}`);
+      button.addEventListener("click", () => dispatchBox(box, button));
+      actions.appendChild(button);
+      cell.appendChild(actions);
+      row.appendChild(cell);
+    }
+
+    dispatchBody.appendChild(row);
+  });
+
+  dispatchTotalDone.textContent = String(inventory.filter((box) => box.estadoCaja === "DESPACHADO").length);
+  dispatchTotalPending.textContent = String(inventory.filter((box) => box.estadoCaja === "NO_DESPACHADO").length);
+  dispatchAllButton.disabled = filteredBoxes.length === 0;
+  dispatchMessage.textContent = inventory.length === 0
+    ? "No hay cajas registradas."
+    : filteredBoxes.length === 0
+      ? "No hay cajas pendientes que coincidan con los filtros."
+      : "";
+  dispatchMessage.hidden = filteredBoxes.length > 0;
+  renderDashboard();
+}
+
+function renderDashboard() {
+  const dispatched = inventory.filter((box) => box.estadoCaja === "DESPACHADO").length;
+  const pending = inventory.length - dispatched;
+  const dispatchedPercent = inventory.length ? (dispatched / inventory.length) * 100 : 0;
+
+  dashboardPieTotal.textContent = String(inventory.length);
+  dashboardDoneCount.textContent = String(dispatched);
+  dashboardPendingCount.textContent = String(pending);
+  dashboardPie.classList.toggle("is-empty", inventory.length === 0);
+  dashboardPie.style.setProperty("--dispatched-percent", `${dispatchedPercent}%`);
+  dashboardPie.setAttribute(
+    "aria-label",
+    `${inventory.length} cajas en total: ${dispatched} despachadas y ${pending} no despachadas`
+  );
+
+  const zones = new Map();
+  inventory.forEach((box) => {
+    const destination = box.zonaDestino || "Sin destino";
+    const counts = zones.get(destination) || { dispatched: 0, pending: 0 };
+    if (box.estadoCaja === "DESPACHADO") counts.dispatched += 1;
+    else counts.pending += 1;
+    zones.set(destination, counts);
+  });
+
+  const sortedZones = [...zones.entries()].sort(([first], [second]) => first.localeCompare(second));
+  const maxZoneTotal = Math.max(1, ...sortedZones.map(([, counts]) => counts.dispatched + counts.pending));
+  dashboardZonesChart.replaceChildren();
+  sortedZones.forEach(([destination, counts]) => {
+    const group = document.createElement("section");
+    group.className = "dashboard-zone";
+    const title = document.createElement("h4");
+    title.textContent = destination;
+    group.appendChild(title);
+
+    [
+      { label: "Despachadas", count: counts.dispatched, className: "done" },
+      { label: "No despachadas", count: counts.pending, className: "pending" }
+    ].forEach((item) => {
+      const row = document.createElement("div");
+      row.className = "dashboard-bar-row";
+      const label = document.createElement("span");
+      label.className = "dashboard-bar-label";
+      label.textContent = item.label;
+      const track = document.createElement("div");
+      track.className = "dashboard-bar-track";
+      track.setAttribute("aria-hidden", "true");
+      const fill = document.createElement("div");
+      fill.className = `dashboard-bar-fill dashboard-bar-fill--${item.className}`;
+      fill.style.width = `${(item.count / maxZoneTotal) * 100}%`;
+      track.appendChild(fill);
+      const value = document.createElement("strong");
+      value.textContent = String(item.count);
+      row.append(label, track, value);
+      group.appendChild(row);
+    });
+
+    dashboardZonesChart.appendChild(group);
+  });
+  dashboardZonesEmpty.hidden = sortedZones.length > 0;
+}
+
+async function confirmDispatchAll(count) {
+  dispatchConfirmMessage.textContent = `¿Deseas despachar las ${count} cajas pendientes que coinciden con los filtros?`;
+  const confirmation = new Promise((resolve) => {
+    dispatchConfirmDialog.addEventListener("close", () => {
+      resolve(dispatchConfirmDialog.returnValue === "confirm");
+    }, { once: true });
+  });
+  dispatchConfirmDialog.showModal();
+  return confirmation;
+}
+
+async function updateBoxStatus(box) {
+  const response = await fetch(`${apiBaseUrl}/api/cajas/${encodeURIComponent(box.idCaja)}/estado`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${sessionStorage.getItem("authToken")}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ estado: "DESPACHADO" })
+  });
+
+  if (!response.ok) {
+    let message = `No fue posible despachar la caja ${box.idCaja} (HTTP ${response.status}).`;
+    try {
+      const result = await response.json();
+      message = result.mensaje || message;
+    } catch {
+      // Keep the HTTP status message when the server does not return JSON.
+    }
+    if (response.status === 401) message = "La sesión expiró. Inicia sesión nuevamente.";
+    throw new Error(message);
+  }
+
+  const result = await response.json();
+  if (result.idCaja !== box.idCaja || result.estadoCaja !== "DESPACHADO") {
+    throw new Error(`El servidor devolvió un estado inválido para la caja ${box.idCaja}.`);
+  }
+  inventory = inventory.map((item) => item.idCaja === box.idCaja ? result : item);
+}
+
+async function dispatchBox(box, button) {
+  button.disabled = true;
+  dispatchMessage.hidden = true;
+  try {
+    await updateBoxStatus(box);
+    renderInventory();
+    renderDispatch();
+    dispatchMessage.textContent = `La caja ${box.idCaja} fue despachada.`;
+    dispatchMessage.hidden = false;
+  } catch (error) {
+    dispatchMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : `No fue posible despachar la caja ${box.idCaja}.`;
+    dispatchMessage.hidden = false;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function dispatchFilteredBoxes() {
+  const filteredBoxes = filterBoxes(
+    dispatchSearchInput.value.trim().toLocaleLowerCase(),
+    dispatchDestinationFilter.value
+  ).filter((box) => box.estadoCaja === "NO_DESPACHADO");
+  if (!filteredBoxes.length || currentUserType !== "ADMINISTRADOR") return;
+  if (!await confirmDispatchAll(filteredBoxes.length)) return;
+
+  dispatchAllButton.disabled = true;
+  dispatchMessage.hidden = true;
+  let dispatched = 0;
+  const failures = [];
+
+  for (const box of filteredBoxes) {
+    try {
+      await updateBoxStatus(box);
+      dispatched += 1;
+    } catch (error) {
+      failures.push(error instanceof TypeError
+        ? "No se pudo conectar con el servidor."
+        : error instanceof Error
+          ? error.message
+          : `No fue posible despachar la caja ${box.idCaja}.`);
+    }
+  }
+
+  renderInventory();
+  renderDispatch();
+  dispatchMessage.textContent = failures.length
+    ? `${dispatched} caja(s) despachada(s). ${failures.length} no se pudieron despachar: ${failures.join(" ")}`
+    : `${dispatched} caja(s) despachada(s) correctamente.`;
+  dispatchMessage.hidden = false;
+}
+
+function populateDestinationFilter() {
+  const destinations = [...new Set(inventory.map((box) => box.zonaDestino).filter(Boolean))].sort();
+  destinationFilter.replaceChildren(new Option("Todos los destinos", ""));
+  dispatchDestinationFilter.replaceChildren(new Option("Todos los destinos", ""));
+  destinations.forEach((destination) => {
+    destinationFilter.add(new Option(destination, destination));
+    dispatchDestinationFilter.add(new Option(destination, destination));
+  });
+}
+
+async function loadInventory() {
+  inventoryMessage.textContent = "Cargando cajas...";
+  inventoryMessage.hidden = false;
+  inventoryBody.replaceChildren();
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/cajas`, {
+      headers: { Authorization: `Bearer ${sessionStorage.getItem("authToken")}` }
+    });
+    if (response.status === 401) throw new Error("La sesión expiró. Inicia sesión nuevamente.");
+    if (!response.ok) throw new Error(`No fue posible consultar las cajas (HTTP ${response.status}).`);
+
+    const result = await response.json();
+    if (!Array.isArray(result)) throw new Error("El servidor devolvió una lista de cajas inválida.");
+
+    inventory = result;
+    inventoryTotal.textContent = String(inventory.length);
+    populateDestinationFilter();
+    renderInventory();
+    renderDispatch();
+    dashboardMessage.hidden = true;
+  } catch (error) {
+    inventory = [];
+    inventoryTotal.textContent = "0";
+    populateDestinationFilter();
+    inventoryMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : "No fue posible cargar las cajas.";
+    inventoryMessage.hidden = false;
+    dispatchTotalDone.textContent = "0";
+    dispatchTotalPending.textContent = "0";
+    dispatchBody.replaceChildren();
+    dispatchMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : "No fue posible cargar las cajas.";
+    dispatchMessage.hidden = false;
+    renderDashboard();
+    dashboardMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : "No fue posible cargar el resumen de cajas.";
+    dashboardMessage.hidden = false;
+  }
+}
+
+function showUserFormMessage(message, isError = false) {
+  userFormMessage.textContent = message;
+  userFormMessage.classList.toggle("is-error", isError);
+  userFormMessage.hidden = false;
+}
+
+function showUsersMessage(message, isError = false) {
+  usersMessage.textContent = message;
+  usersMessage.classList.toggle("is-error", isError);
+  usersMessage.hidden = false;
+}
+
+function renderUsers() {
+  usersBody.replaceChildren();
+  users.forEach((user) => {
+    const row = document.createElement("tr");
+    addCell(row, user.correo);
+    addCell(row, user.tipo === "ADMINISTRADOR" ? "Administrador" : "Voluntario");
+
+    const actions = document.createElement("td");
+    if (user.tipo === "VOLUNTARIO") {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "user-delete-button";
+      button.textContent = "Eliminar";
+      button.setAttribute("aria-label", `Eliminar voluntario ${user.correo}`);
+      button.addEventListener("click", () => deleteVolunteer(user, button));
+      actions.appendChild(button);
+    } else {
+      actions.textContent = "—";
+    }
+    row.appendChild(actions);
+    usersBody.appendChild(row);
+  });
+}
+
+async function responseErrorMessage(response, fallback) {
+  try {
+    const result = await response.json();
+    const validationMessage = result.errores && Object.values(result.errores)[0];
+    return validationMessage || result.mensaje || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+async function loadUsers() {
+  if (currentUserType !== "ADMINISTRADOR") return;
+  usersMessage.textContent = "Cargando usuarios...";
+  usersMessage.classList.remove("is-error");
+  usersMessage.hidden = false;
+  usersBody.replaceChildren();
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/usuarios`, {
+      headers: { Authorization: `Bearer ${sessionStorage.getItem("authToken")}` }
+    });
+    if (!response.ok) {
+      const fallback = response.status === 401
+        ? "La sesión expiró. Inicia sesión nuevamente."
+        : `No fue posible consultar los usuarios (HTTP ${response.status}).`;
+      throw new Error(await responseErrorMessage(response, fallback));
+    }
+
+    const result = await response.json();
+    if (!Array.isArray(result)
+      || result.some((user) => !user.id || !user.correo || !["ADMINISTRADOR", "VOLUNTARIO"].includes(user.tipo))) {
+      throw new Error("El servidor devolvió una lista de usuarios inválida.");
+    }
+    users = result;
+    renderUsers();
+    usersMessage.textContent = users.length ? "" : "No hay usuarios registrados.";
+    usersMessage.hidden = users.length > 0;
+  } catch (error) {
+    users = [];
+    usersBody.replaceChildren();
+    showUsersMessage(error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : "No fue posible cargar los usuarios.", true);
+  }
+}
+
+userForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  userFormMessage.hidden = true;
+  if (currentUserType !== "ADMINISTRADOR") {
+    showView("inicio");
+    return;
+  }
+
+  const submitButton = userForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/usuarios`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${sessionStorage.getItem("authToken")}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        correo: userForm.elements.correo.value.trim(),
+        clave: userForm.elements.clave.value,
+        tipo: "VOLUNTARIO"
+      })
+    });
+    if (!response.ok) {
+      const fallback = response.status === 401
+        ? "La sesión expiró. Inicia sesión nuevamente."
+        : response.status === 403
+          ? "Solo un administrador puede agregar voluntarios."
+          : `No fue posible agregar el voluntario (HTTP ${response.status}).`;
+      showUserFormMessage(await responseErrorMessage(response, fallback), true);
+      return;
+    }
+
+    const result = await response.json();
+    if (!result.id || !result.correo || result.tipo !== "VOLUNTARIO") {
+      throw new Error("El servidor no confirmó el registro del voluntario.");
+    }
+    userForm.reset();
+    await loadUsers();
+    showUserFormMessage(`Se agregó el voluntario ${result.correo}.`);
+  } catch (error) {
+    showUserFormMessage(error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : "No fue posible agregar el voluntario.", true);
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+async function confirmVolunteerDeletion(user) {
+  userDeleteConfirmMessage.textContent = `¿Seguro que deseas eliminar al voluntario ${user.correo}? Esta acción no se puede deshacer.`;
+  const confirmation = new Promise((resolve) => {
+    userDeleteConfirmDialog.addEventListener("close", () => {
+      resolve(userDeleteConfirmDialog.returnValue === "confirm");
+    }, { once: true });
+  });
+  userDeleteConfirmDialog.showModal();
+  return confirmation;
+}
+
+async function deleteVolunteer(user, button) {
+  if (currentUserType !== "ADMINISTRADOR" || user.tipo !== "VOLUNTARIO") return;
+  if (!await confirmVolunteerDeletion(user)) return;
+
+  button.disabled = true;
+  usersMessage.hidden = true;
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/usuarios/${encodeURIComponent(user.id)}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${sessionStorage.getItem("authToken")}` }
+    });
+    if (!response.ok) {
+      const fallback = response.status === 401
+        ? "La sesión expiró. Inicia sesión nuevamente."
+        : response.status === 403
+          ? "Solo un administrador puede eliminar voluntarios."
+          : `No fue posible eliminar el voluntario (HTTP ${response.status}).`;
+      throw new Error(await responseErrorMessage(response, fallback));
+    }
+
+    users = users.filter((item) => item.id !== user.id);
+    renderUsers();
+    showUsersMessage(`Se eliminó el voluntario ${user.correo}.`);
+  } catch (error) {
+    showUsersMessage(error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : "No fue posible eliminar el voluntario.", true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+registerForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  registerMessage.hidden = true;
+
+  if (currentUserType !== "ADMINISTRADOR") {
+    showView("inventario");
+    return;
+  }
+
+  const submitButton = registerForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/cajas`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${sessionStorage.getItem("authToken")}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contenido: registerForm.elements.contenido.value.trim(),
+        zonaDestino: registerForm.elements.zonaDestino.value.trim()
+      })
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      const validationMessage = result.errores && Object.values(result.errores)[0];
+      registerMessage.textContent = response.status === 401
+        ? "La sesión expiró. Inicia sesión nuevamente."
+        : response.status === 403
+          ? "Solo un administrador puede registrar cajas."
+          : validationMessage || result.mensaje || "No fue posible registrar la caja.";
+      registerMessage.hidden = false;
+      return;
+    }
+
+    if (!result.idCaja || !result.identificadorQR) {
+      throw new Error("El servidor devolvió una caja sin identificador o código QR.");
+    }
+
+    registerForm.reset();
+    showView("inventario");
+    showBoxQr(result);
+  } catch (error) {
+    registerMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : "No fue posible registrar la caja.";
+    registerMessage.hidden = false;
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+navToggle.addEventListener("click", () => {
+  const open = !appShell.classList.contains("is-nav-open");
+  appShell.classList.toggle("is-nav-open", open);
+  navToggle.setAttribute("aria-expanded", String(open));
+  navBackdrop.hidden = !open;
+});
+
+navBackdrop.addEventListener("click", closeDrawer);
+
+loginForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  loginMessage.hidden = true;
+
+  const submitButton = loginForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        correo: loginForm.elements.correo.value.trim(),
+        clave: loginForm.elements.clave.value
+      })
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      loginMessage.textContent = response.status === 401
+        ? "Correo o clave incorrectos."
+        : "No fue posible iniciar sesión. Inténtalo de nuevo.";
+      loginMessage.hidden = false;
+      return;
+    }
+
+    if (typeof result.token !== "string" || !result.token
+      || !["ADMINISTRADOR", "VOLUNTARIO"].includes(result.tipo)) {
+      throw new Error("Respuesta de autenticación inválida");
+    }
+
+    sessionStorage.setItem("authToken", result.token);
+    currentUserType = result.tipo;
+    currentUserEmail = loginForm.elements.correo.value.trim();
+    loginForm.reset();
+    showView("inicio");
+  } catch (error) {
+    loginMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : "El servidor devolvió una respuesta inválida.";
+    loginMessage.hidden = false;
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+function showLoginForm(message = "") {
+  passwordResetPanel.hidden = true;
+  showPasswordResetButton.hidden = false;
+  returnToLoginButton.hidden = true;
+  loginForm.hidden = false;
+  loginMessage.textContent = message;
+  loginMessage.hidden = !message;
+  passwordResetMessage.hidden = true;
+  passwordResetRequestForm.reset();
+  passwordResetConfirmForm.reset();
+  passwordResetRequestForm.hidden = false;
+  passwordResetConfirmForm.hidden = true;
+}
+
+showPasswordResetButton.addEventListener("click", () => {
+  loginMessage.hidden = true;
+  loginForm.hidden = true;
+  showPasswordResetButton.hidden = true;
+  passwordResetPanel.hidden = false;
+  returnToLoginButton.hidden = false;
+  passwordResetRequestForm.reset();
+  passwordResetConfirmForm.reset();
+  passwordResetRequestForm.hidden = false;
+  passwordResetConfirmForm.hidden = true;
+  passwordResetMessage.hidden = true;
+  passwordResetRequestForm.elements.correo.value = loginForm.elements.correo.value.trim();
+  passwordResetRequestForm.elements.correo.focus();
+});
+
+returnToLoginButton.addEventListener("click", () => showLoginForm());
+
+passwordResetRequestForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  passwordResetMessage.hidden = true;
+  const submitButton = passwordResetRequestForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+
+  const correo = passwordResetRequestForm.elements.correo.value.trim();
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/auth/password-reset/request`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ correo })
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      const validationMessage = result.errores && Object.values(result.errores)[0];
+      passwordResetMessage.textContent = validationMessage || result.mensaje
+        || "No fue posible solicitar el código.";
+      passwordResetMessage.hidden = false;
+      return;
+    }
+
+    passwordResetMessage.textContent = result.mensaje
+      || "Si el correo está registrado, recibirás un código de verificación.";
+    passwordResetMessage.hidden = false;
+    document.getElementById("reset-confirm-email").value = correo;
+    passwordResetRequestForm.hidden = true;
+    passwordResetConfirmForm.hidden = false;
+    passwordResetConfirmForm.elements.codigo.focus();
+  } catch (error) {
+    passwordResetMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : "No fue posible solicitar el código.";
+    passwordResetMessage.hidden = false;
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+passwordResetConfirmForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  passwordResetMessage.hidden = true;
+  const nuevaClave = passwordResetConfirmForm.elements.nuevaClave.value;
+  if (nuevaClave !== passwordResetConfirmForm.elements.confirmarClave.value) {
+    passwordResetMessage.textContent = "Las contraseñas no coinciden.";
+    passwordResetMessage.hidden = false;
+    return;
+  }
+
+  const submitButton = passwordResetConfirmForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/auth/password-reset/confirm`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        correo: passwordResetConfirmForm.elements.correo.value,
+        codigo: passwordResetConfirmForm.elements.codigo.value.trim(),
+        nuevaClave
+      })
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      const validationMessage = result.errores && Object.values(result.errores)[0];
+      passwordResetMessage.textContent = validationMessage || result.mensaje
+        || "No fue posible restablecer la contraseña.";
+      passwordResetMessage.hidden = false;
+      return;
+    }
+
+    loginForm.elements.correo.value = passwordResetConfirmForm.elements.correo.value;
+    showLoginForm(result.mensaje || "Contraseña restablecida. Inicia sesión con tu nueva clave.");
+  } catch (error) {
+    passwordResetMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : "No fue posible restablecer la contraseña.";
+    passwordResetMessage.hidden = false;
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+logoutButton.addEventListener("click", () => {
+  sessionStorage.removeItem("authToken");
+  currentUserType = null;
+  currentUserEmail = "";
+  inventory = [];
+  users = [];
+  closeDrawer();
+  showView("login");
+  showLoginForm();
+});
+
+document.querySelectorAll(".nav-item").forEach((item) => {
+  item.addEventListener("click", () => showView(item.dataset.view));
+});
+
+searchInput.addEventListener("input", renderInventory);
+destinationFilter.addEventListener("change", renderInventory);
+dispatchSearchInput.addEventListener("input", renderDispatch);
+dispatchDestinationFilter.addEventListener("change", renderDispatch);
+dispatchAllButton.addEventListener("click", dispatchFilteredBoxes);
+document.querySelector(".inventory-summary .btn-outline").addEventListener("click", () => showView("registrar"));
+deleteConfirmDialog.querySelector('[value="cancel"]').addEventListener("click", () => deleteConfirmDialog.close("cancel"));
+deleteConfirmDialog.querySelector('[value="confirm"]').addEventListener("click", () => deleteConfirmDialog.close("confirm"));
+dispatchConfirmDialog.querySelector('[value="cancel"]').addEventListener("click", () => dispatchConfirmDialog.close("cancel"));
+dispatchConfirmDialog.querySelector('[value="confirm"]').addEventListener("click", () => dispatchConfirmDialog.close("confirm"));
+userDeleteConfirmDialog.querySelector('[value="cancel"]').addEventListener("click", () => userDeleteConfirmDialog.close("cancel"));
+userDeleteConfirmDialog.querySelector('[value="confirm"]').addEventListener("click", () => userDeleteConfirmDialog.close("confirm"));
+
+document.querySelectorAll('form:not(#login-form):not(#password-reset-request-form):not(#password-reset-confirm-form):not(#registrar-form):not(#edit-box-form):not(#user-form):not([method="dialog"])').forEach((form) => {
+  form.addEventListener("submit", (event) => event.preventDefault());
+});
+
+document.querySelectorAll("[data-visual-only]").forEach((link) => {
+  link.addEventListener("click", (event) => event.preventDefault());
+});
+
+showView("login");

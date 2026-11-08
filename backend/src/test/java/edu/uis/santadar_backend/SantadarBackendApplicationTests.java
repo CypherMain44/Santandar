@@ -1,9 +1,9 @@
-package edu.uis.santadar_backend;
+package edu.uis.santandar_backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+@SpringBootTest(classes = edu.uis.santandar_backend.SantandarBackendApplication.class)
 class SantadarBackendApplicationTests {
 
 	@Test

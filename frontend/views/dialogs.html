@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"></head>
+<body>
+<dialog id="qr-dialog" class="qr-dialog" aria-labelledby="qr-title">
+    <form method="dialog">
+      <button class="qr-dialog-close" type="submit" aria-label="Cerrar">×</button>
+    </form>
+    <h2 id="qr-title">Código QR de la caja</h2>
+    <div id="qr-code" class="qr-code" role="img" aria-label="Código QR con los datos de la caja"></div>
+    <p id="qr-error" class="qr-error" role="alert" hidden></p>
+    <p id="qr-details" class="qr-details"></p>
+    <p class="qr-help">Al escanear el código se mostrarán estos datos de la caja.</p>
+  </dialog>
+
+<dialog id="delete-confirm-dialog" class="qr-dialog" aria-labelledby="delete-confirm-title">
+    <h2 id="delete-confirm-title">Eliminar caja</h2>
+    <p id="delete-confirm-message"></p>
+    <div class="delete-confirm-actions">
+      <button class="btn-outline" type="button" value="cancel">Cancelar</button>
+      <button class="btn-pill" type="button" value="confirm">Eliminar</button>
+    </div>
+  </dialog>
+
+<dialog id="dispatch-confirm-dialog" class="qr-dialog" aria-labelledby="dispatch-confirm-title">
+    <h2 id="dispatch-confirm-title">Despachar cajas</h2>
+    <p id="dispatch-confirm-message"></p>
+    <div class="delete-confirm-actions">
+      <button class="btn-outline" type="button" value="cancel">Cancelar</button>
+      <button class="btn-pill" type="button" value="confirm">Despachar</button>
+    </div>
+  </dialog>
+
+<dialog id="user-delete-confirm-dialog" class="qr-dialog" aria-labelledby="user-delete-confirm-title">
+    <h2 id="user-delete-confirm-title">Eliminar voluntario</h2>
+    <p id="user-delete-confirm-message"></p>
+    <div class="delete-confirm-actions">
+      <button class="btn-outline" type="button" value="cancel">Cancelar</button>
+      <button class="btn-pill" type="button" value="confirm">Eliminar</button>
+    </div>
+  </dialog>
+
+<dialog id="edit-box-dialog" class="qr-dialog edit-box-dialog" aria-labelledby="edit-box-title">
+    <h2 id="edit-box-title">Editar caja</h2>
+    <p id="edit-box-message" class="register-message" role="alert" hidden></p>
+    <form id="edit-box-form">
+      <label for="edit-box-content">Contenido</label>
+      <input id="edit-box-content" name="contenido" type="text" autocomplete="off" required>
+      <label for="edit-box-destination">Destino</label>
+      <input id="edit-box-destination" name="zonaDestino" type="text" autocomplete="off" required>
+      <div class="delete-confirm-actions">
+        <button class="btn-outline" type="button" value="cancel">Cancelar</button>
+        <button class="btn-pill" type="submit">Guardar cambios</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

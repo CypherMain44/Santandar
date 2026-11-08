@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"></head>
+<body>
+<section class="app-view" data-app-view="inicio" hidden>
+          <h2>Inicio</h2>
+          <article class="dashboard-welcome">
+            <div>
+              <h3>¡Bienvenido!</h3>
+              <p>Has iniciado sesión como <strong id="dashboard-user-email"></strong></p>
+            </div>
+          </article>
+          <p id="dashboard-message" class="dashboard-message" role="status" aria-live="polite" hidden></p>
+          <div class="dashboard-grid">
+            <article class="dashboard-card" aria-labelledby="dashboard-dispatch-title">
+              <h3 id="dashboard-dispatch-title">Estado de despacho</h3>
+              <div class="dashboard-pie-content">
+                <div id="dashboard-pie" class="dashboard-pie is-empty" role="img" aria-label="Sin cajas registradas">
+                  <div class="dashboard-pie-center">
+                    <strong id="dashboard-pie-total">0</strong>
+                    <span>cajas</span>
+                  </div>
+                </div>
+                <ul class="dashboard-legend">
+                  <li><span class="legend-swatch legend-swatch--done" aria-hidden="true"></span><span>Despachadas</span><strong id="dashboard-done-count">0</strong></li>
+                  <li><span class="legend-swatch legend-swatch--pending" aria-hidden="true"></span><span>No despachadas</span><strong id="dashboard-pending-count">0</strong></li>
+                </ul>
+              </div>
+            </article>
+            <article class="dashboard-card" aria-labelledby="dashboard-zones-title">
+              <h3 id="dashboard-zones-title">Cajas por zona de destino</h3>
+              <ul class="dashboard-legend dashboard-legend--inline">
+                <li><span class="legend-swatch legend-swatch--done" aria-hidden="true"></span><span>Despachadas</span></li>
+                <li><span class="legend-swatch legend-swatch--pending" aria-hidden="true"></span><span>No despachadas</span></li>
+              </ul>
+              <div id="dashboard-zones-chart" class="dashboard-zones-chart" aria-label="Cantidad de cajas por destino y estado"></div>
+              <p id="dashboard-zones-empty" class="dashboard-empty" hidden>Aún no hay cajas registradas.</p>
+            </article>
+          </div>
+        </section>
+</body>
+</html>

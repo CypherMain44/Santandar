@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"></head>
+<body>
+<section class="app-view" data-app-view="inventario" hidden>
+          <h2>Panel de Gestión de Inventario de SantanDar</h2>
+          <div class="inventory-summary">
+            <button class="btn-outline" type="button" data-admin-only hidden>Añadir Nueva Caja</button>
+            <article class="stat-card">
+              <p>Total de Cajas Registradas:</p>
+              <strong id="inventory-total">0</strong>
+            </article>
+          </div>
+
+          <div class="inventory-tools">
+            <label class="sr-only" for="buscar">Buscar caja</label>
+            <input id="buscar" class="search-input" type="search" name="q" placeholder="Buscar..." autocomplete="off">
+            <label class="sr-only" for="filtro-destino">Filtro por destino</label>
+            <select id="filtro-destino" name="zonaDestino">
+              <option value="">Todos los destinos</option>
+            </select>
+          </div>
+
+          <div class="table-card">
+            <p id="inventory-message" role="status" aria-live="polite" hidden></p>
+            <div class="table-scroll">
+              <table class="inventory-table">
+                <thead>
+                  <tr>
+                    <th scope="col">ID Caja</th>
+                    <th scope="col">Destino</th>
+                    <th scope="col">Contenido</th>
+                    <th scope="col">Estado</th>
+                    <th id="inventory-actions-heading" scope="col" data-admin-only hidden>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="inventory-body">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+</body>
+</html>

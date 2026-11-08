@@ -13,18 +13,28 @@ Sistema web para la gestión de inventario y trazabilidad de donaciones mediante
 |---|---|
 | Backend | Java 21, Spring Boot, Spring Security (JWT), Spring Data MongoDB |
 | Base de datos | MongoDB Atlas |
-| Frontend | _Por definir_ |
+| Frontend | _Java Script , CSS , HTML_ |
 
 ## Estructura del repositorio
 
 ```
 santandar/
 ├── backend/     API REST (Spring Boot)
-├── frontend/    Aplicación web
+├── frontend/    Aplicación web estática servida por HTTP
+│   ├── index.html
+│   ├── views/       Pantallas HTML y guía de organización
+│   └── resources/
+│       ├── css/
+│       ├── js/
+│       └── images/  Logo y recursos gráficos
 └── docs/
     ├── diagramas/   Diagramas UML
     └── informes/    Requerimientos, EDT y gestión del proyecto
 ```
+
+Las pantallas se cargan desde archivos de `frontend/views/`; consulta
+`frontend/views/README.md` para agregar una y `frontend/resources/images/README.md`
+para incorporar el logo.
 
 ## Puesta en marcha del backend
 
@@ -41,8 +51,23 @@ Define estas variables en tu computador o en la configuración de ejecución del
 |---|---|
 | `MONGODB_URI` | Cadena de conexión de MongoDB Atlas (con el nombre de la base de datos `santandar`) |
 | `JWT_SECRET` | Texto aleatorio de mínimo 32 caracteres (cuando se implemente la seguridad) |
+| `BREVO_API_KEY` | Clave de API de Brevo para enviar correos transaccionales |
+| `BREVO_SENDER_EMAIL` | Dirección remitente verificada en Brevo |
+| `BREVO_SENDER_NAME` | Nombre visible del remitente (por defecto `SantanDar`) |
 
-En `backend/src/main/resources/application-example.properties` hay una guía de las propiedades. **Nunca subas credenciales reales al repositorio.**
+La clave de API y la dirección remitente deben configurarse como variables de
+entorno y nunca guardarse en el repositorio. Brevo envía los códigos temporales
+de seis dígitos, válidos durante 10 minutos. La dirección remitente debe estar
+verificada en Brevo.
+
+En PowerShell, define las variables antes de iniciar el backend:
+
+```powershell
+$env:BREVO_API_KEY = "tu-clave-de-api-de-brevo"
+$env:BREVO_SENDER_EMAIL = "cuenta-remitente@example.com"
+$env:BREVO_SENDER_NAME = "SantanDar"
+.\backend\mvnw.cmd -f backend\pom.xml spring-boot:run
+```
 
 ### 3. Ejecutar
 
@@ -57,7 +82,7 @@ La API queda disponible en `http://localhost:8080`.
 
 - `main`: código estable, solo para entregas.
 - `develop`: integración del trabajo del sprint.
-- `feature/nombre-de-la-tarea`: una rama por historia de usuario, que se integra a `develop` mediante Pull Request revisado por otro integrante.
+
 
 Prefijos para los mensajes de commit:
 
@@ -70,6 +95,6 @@ Prefijos para los mensajes de commit:
 
 ## Equipo
 
-- _Integrante 1_
-- _Integrante 2_
-- _Integrante 3_
+- _William Fernando Basto Corzo - 2235607_
+- _Javier Alberto Alean Gonzalez - 2235610_
+- _David Alejandro Sandoval Rojas - 2235656_
