@@ -80,7 +80,7 @@ class UsuarioControllerTest {
 
     @Test
     void registrar_DebeDelegarAlServicio() {
-        RegistroUsuarioRequest regReq = new RegistroUsuarioRequest("user@test.com", "pass", TipoUsuario.VOLUNTARIO);
+        RegistroUsuarioRequest regReq = new RegistroUsuarioRequest("user@test.com", "password123", TipoUsuario.VOLUNTARIO);
         when(usuarioService.registrarUsuario(regReq)).thenReturn(response);
 
         UsuarioResponse resultado = usuarioController.registrar(regReq);

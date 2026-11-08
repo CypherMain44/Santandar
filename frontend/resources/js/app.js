@@ -30,8 +30,15 @@ const editBoxForm = document.getElementById("edit-box-form");
 const editBoxMessage = document.getElementById("edit-box-message");
 const registerForm = document.getElementById("registrar-form");
 const registerMessage = document.getElementById("registrar-message");
+const userForm = document.getElementById("user-form");
+const userFormMessage = document.getElementById("users-form-message");
+const usersBody = document.getElementById("users-body");
+const usersMessage = document.getElementById("users-message");
+const userDeleteConfirmDialog = document.getElementById("user-delete-confirm-dialog");
+const userDeleteConfirmMessage = document.getElementById("user-delete-confirm-message");
 let currentUserType = null;
 let inventory = [];
+let users = [];
 let editingBoxId = null;
 
 inventoryBody.replaceChildren();
@@ -54,6 +61,9 @@ function showView(name) {
   if (name === "registrar" && currentUserType !== "ADMINISTRADOR") {
     name = "inventario";
   }
+  if (name === "usuarios" && currentUserType !== "ADMINISTRADOR") {
+    name = "inicio";
+  }
 
   const isLogin = name === "login";
   loginView.hidden = !isLogin;
@@ -73,6 +83,7 @@ function showView(name) {
 
   updateAdminControls();
   if (name === "inventario" || name === "despacho") loadInventory();
+  if (name === "usuarios") loadUsers();
   closeDrawer();
 }
 
@@ -527,6 +538,186 @@ async function loadInventory() {
   }
 }
 
+function showUserFormMessage(message, isError = false) {
+  userFormMessage.textContent = message;
+  userFormMessage.classList.toggle("is-error", isError);
+  userFormMessage.hidden = false;
+}
+
+function showUsersMessage(message, isError = false) {
+  usersMessage.textContent = message;
+  usersMessage.classList.toggle("is-error", isError);
+  usersMessage.hidden = false;
+}
+
+function renderUsers() {
+  usersBody.replaceChildren();
+  users.forEach((user) => {
+    const row = document.createElement("tr");
+    addCell(row, user.correo);
+    addCell(row, user.tipo === "ADMINISTRADOR" ? "Administrador" : "Voluntario");
+
+    const actions = document.createElement("td");
+    if (user.tipo === "VOLUNTARIO") {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "user-delete-button";
+      button.textContent = "Eliminar";
+      button.setAttribute("aria-label", `Eliminar voluntario ${user.correo}`);
+      button.addEventListener("click", () => deleteVolunteer(user, button));
+      actions.appendChild(button);
+    } else {
+      actions.textContent = "—";
+    }
+    row.appendChild(actions);
+    usersBody.appendChild(row);
+  });
+}
+
+async function responseErrorMessage(response, fallback) {
+  try {
+    const result = await response.json();
+    const validationMessage = result.errores && Object.values(result.errores)[0];
+    return validationMessage || result.mensaje || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+async function loadUsers() {
+  if (currentUserType !== "ADMINISTRADOR") return;
+  usersMessage.textContent = "Cargando usuarios...";
+  usersMessage.classList.remove("is-error");
+  usersMessage.hidden = false;
+  usersBody.replaceChildren();
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/usuarios`, {
+      headers: { Authorization: `Bearer ${sessionStorage.getItem("authToken")}` }
+    });
+    if (!response.ok) {
+      const fallback = response.status === 401
+        ? "La sesión expiró. Inicia sesión nuevamente."
+        : `No fue posible consultar los usuarios (HTTP ${response.status}).`;
+      throw new Error(await responseErrorMessage(response, fallback));
+    }
+
+    const result = await response.json();
+    if (!Array.isArray(result)
+      || result.some((user) => !user.id || !user.correo || !["ADMINISTRADOR", "VOLUNTARIO"].includes(user.tipo))) {
+      throw new Error("El servidor devolvió una lista de usuarios inválida.");
+    }
+    users = result;
+    renderUsers();
+    usersMessage.textContent = users.length ? "" : "No hay usuarios registrados.";
+    usersMessage.hidden = users.length > 0;
+  } catch (error) {
+    users = [];
+    usersBody.replaceChildren();
+    showUsersMessage(error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : "No fue posible cargar los usuarios.", true);
+  }
+}
+
+userForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  userFormMessage.hidden = true;
+  if (currentUserType !== "ADMINISTRADOR") {
+    showView("inicio");
+    return;
+  }
+
+  const submitButton = userForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/usuarios`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${sessionStorage.getItem("authToken")}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        correo: userForm.elements.correo.value.trim(),
+        clave: userForm.elements.clave.value,
+        tipo: "VOLUNTARIO"
+      })
+    });
+    if (!response.ok) {
+      const fallback = response.status === 401
+        ? "La sesión expiró. Inicia sesión nuevamente."
+        : response.status === 403
+          ? "Solo un administrador puede agregar voluntarios."
+          : `No fue posible agregar el voluntario (HTTP ${response.status}).`;
+      showUserFormMessage(await responseErrorMessage(response, fallback), true);
+      return;
+    }
+
+    const result = await response.json();
+    if (!result.id || !result.correo || result.tipo !== "VOLUNTARIO") {
+      throw new Error("El servidor no confirmó el registro del voluntario.");
+    }
+    userForm.reset();
+    await loadUsers();
+    showUserFormMessage(`Se agregó el voluntario ${result.correo}.`);
+  } catch (error) {
+    showUserFormMessage(error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : "No fue posible agregar el voluntario.", true);
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+async function confirmVolunteerDeletion(user) {
+  userDeleteConfirmMessage.textContent = `¿Seguro que deseas eliminar al voluntario ${user.correo}? Esta acción no se puede deshacer.`;
+  const confirmation = new Promise((resolve) => {
+    userDeleteConfirmDialog.addEventListener("close", () => {
+      resolve(userDeleteConfirmDialog.returnValue === "confirm");
+    }, { once: true });
+  });
+  userDeleteConfirmDialog.showModal();
+  return confirmation;
+}
+
+async function deleteVolunteer(user, button) {
+  if (currentUserType !== "ADMINISTRADOR" || user.tipo !== "VOLUNTARIO") return;
+  if (!await confirmVolunteerDeletion(user)) return;
+
+  button.disabled = true;
+  usersMessage.hidden = true;
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/usuarios/${encodeURIComponent(user.id)}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${sessionStorage.getItem("authToken")}` }
+    });
+    if (!response.ok) {
+      const fallback = response.status === 401
+        ? "La sesión expiró. Inicia sesión nuevamente."
+        : response.status === 403
+          ? "Solo un administrador puede eliminar voluntarios."
+          : `No fue posible eliminar el voluntario (HTTP ${response.status}).`;
+      throw new Error(await responseErrorMessage(response, fallback));
+    }
+
+    users = users.filter((item) => item.id !== user.id);
+    renderUsers();
+    showUsersMessage(`Se eliminó el voluntario ${user.correo}.`);
+  } catch (error) {
+    showUsersMessage(error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : "No fue posible eliminar el voluntario.", true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
 registerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   registerMessage.hidden = true;
@@ -651,8 +842,10 @@ deleteConfirmDialog.querySelector('[value="cancel"]').addEventListener("click", 
 deleteConfirmDialog.querySelector('[value="confirm"]').addEventListener("click", () => deleteConfirmDialog.close("confirm"));
 dispatchConfirmDialog.querySelector('[value="cancel"]').addEventListener("click", () => dispatchConfirmDialog.close("cancel"));
 dispatchConfirmDialog.querySelector('[value="confirm"]').addEventListener("click", () => dispatchConfirmDialog.close("confirm"));
+userDeleteConfirmDialog.querySelector('[value="cancel"]').addEventListener("click", () => userDeleteConfirmDialog.close("cancel"));
+userDeleteConfirmDialog.querySelector('[value="confirm"]').addEventListener("click", () => userDeleteConfirmDialog.close("confirm"));
 
-document.querySelectorAll('form:not(#login-form):not(#registrar-form):not(#edit-box-form):not([method="dialog"])').forEach((form) => {
+document.querySelectorAll('form:not(#login-form):not(#registrar-form):not(#edit-box-form):not(#user-form):not([method="dialog"])').forEach((form) => {
   form.addEventListener("submit", (event) => event.preventDefault());
 });
 

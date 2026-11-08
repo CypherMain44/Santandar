@@ -372,6 +372,70 @@ body.is-login { background: var(--green); }
   padding: 8px 14px;
 }
 
+.users-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.user-register-card {
+  padding: 22px;
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.user-register-card h3 {
+  margin: 0 0 18px;
+  font-size: 1.15rem;
+}
+
+.user-form {
+  display: grid;
+  gap: 9px;
+}
+
+.user-form label { font-weight: 600; }
+
+.user-form input {
+  width: 100%;
+  min-height: 42px;
+  margin-bottom: 8px;
+  padding: 9px 11px;
+  border: 1px solid #cfcfcf;
+  border-radius: 6px;
+}
+
+.user-form .btn-pill {
+  width: auto;
+  margin-top: 4px;
+  padding: 0 18px;
+}
+
+.users-message {
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+
+.users-message.is-error { color: #b42318; }
+
+.users-table-card { min-width: 0; }
+.users-table-card .inventory-table { min-width: 540px; }
+
+.user-delete-button {
+  min-height: 32px;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: #fff1f0;
+  color: #a4261d;
+  font-weight: 600;
+}
+
+.user-delete-button:hover { background: #ffe2df; }
+
 .table-card {
   border-radius: 8px;
   padding: 8px 8px 12px;
@@ -691,6 +755,8 @@ a:focus-visible {
 
   .inventory-tools,
   .dispatch-tools { justify-content: stretch; }
+
+  .users-layout { grid-template-columns: 1fr; }
 
   .search-input,
   .inventory-tools select,

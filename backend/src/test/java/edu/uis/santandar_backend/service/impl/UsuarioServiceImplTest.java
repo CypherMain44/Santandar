@@ -66,23 +66,33 @@ class UsuarioServiceImplTest {
                 .clave("encodedPass")
                 .build();
 
-        registroRequest = new RegistroUsuarioRequest("admin@test.com", "pass123", TipoUsuario.ADMINISTRADOR);
+        registroRequest = new RegistroUsuarioRequest("voluntario@test.com", "pass123", TipoUsuario.VOLUNTARIO);
         usuarioResponse = new UsuarioResponse("usr-1", "admin@test.com", TipoUsuario.ADMINISTRADOR);
     }
 
     @Test
     void registrarUsuario_Exitoso() {
-        when(usuarioRepository.existsByCorreo("admin@test.com")).thenReturn(false);
+        UsuarioResponse voluntarioResponse = new UsuarioResponse("usr-2", "voluntario@test.com", TipoUsuario.VOLUNTARIO);
+        when(usuarioRepository.existsByCorreo("voluntario@test.com")).thenReturn(false);
         when(passwordEncoder.encode("pass123")).thenReturn("encodedPass");
-        when(usuarioMapper.toEntity(registroRequest, "encodedPass")).thenReturn(admin);
-        when(usuarioRepository.save(admin)).thenReturn(admin);
-        when(usuarioMapper.toResponse(admin)).thenReturn(usuarioResponse);
+        when(usuarioMapper.toEntity(registroRequest, "encodedPass")).thenReturn(voluntario);
+        when(usuarioRepository.save(voluntario)).thenReturn(voluntario);
+        when(usuarioMapper.toResponse(voluntario)).thenReturn(voluntarioResponse);
 
         UsuarioResponse resultado = usuarioService.registrarUsuario(registroRequest);
 
         assertNotNull(resultado);
-        assertEquals("usr-1", resultado.id());
-        verify(usuarioRepository).save(admin);
+        assertEquals("usr-2", resultado.id());
+        assertEquals(TipoUsuario.VOLUNTARIO, resultado.tipo());
+        verify(usuarioRepository).save(voluntario);
+    }
+
+    @Test
+    void registrarUsuario_Administrador_NoPermitido() {
+        RegistroUsuarioRequest request = new RegistroUsuarioRequest(
+                "nuevo-admin@test.com", "pass123", TipoUsuario.ADMINISTRADOR);
+
+        assertThrows(DatosInvalidosException.class, () -> usuarioService.registrarUsuario(request));
     }
 
     @Test
@@ -96,7 +106,7 @@ class UsuarioServiceImplTest {
 
     @Test
     void registrarUsuario_CorreoDuplicado_LanzaExcepcion() {
-        when(usuarioRepository.existsByCorreo("admin@test.com")).thenReturn(true);
+        when(usuarioRepository.existsByCorreo("voluntario@test.com")).thenReturn(true);
 
         assertThrows(RecursoDuplicadoException.class, () -> usuarioService.registrarUsuario(registroRequest));
     }
@@ -125,9 +135,8 @@ class UsuarioServiceImplTest {
     }
 
     @Test
-    void eliminarUsuario_UnicoAdmin_LanzaExcepcion() {
+    void eliminarUsuario_Admin_LanzaExcepcion() {
         when(usuarioRepository.findById("usr-1")).thenReturn(Optional.of(admin));
-        when(usuarioRepository.findAll()).thenReturn(List.of(admin));
 
         assertThrows(DatosInvalidosException.class, () -> usuarioService.eliminarUsuario("usr-1"));
     }

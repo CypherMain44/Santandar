@@ -2,6 +2,7 @@ package edu.uis.santandar_backend.service.impl;
 
 import java.util.List;
 
+import edu.uis.santandar_backend.dto.TipoUsuario;
 import edu.uis.santandar_backend.dto.request.ActualizarUsuarioRequest;
 import edu.uis.santandar_backend.dto.request.RegistroUsuarioRequest;
 import edu.uis.santandar_backend.dto.response.UsuarioResponse;
@@ -9,8 +10,8 @@ import edu.uis.santandar_backend.exception.DatosInvalidosException;
 import edu.uis.santandar_backend.exception.RecursoDuplicadoException;
 import edu.uis.santandar_backend.exception.RecursoNoEncontradoException;
 import edu.uis.santandar_backend.mapper.UsuarioMapper;
-import edu.uis.santandar_backend.model.Administrador;
 import edu.uis.santandar_backend.model.Usuario;
+import edu.uis.santandar_backend.model.Voluntario;
 import edu.uis.santandar_backend.repository.UsuarioRepository;
 import edu.uis.santandar_backend.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,9 @@ public class UsuarioServiceImpl implements UsuarioService, UserDetailsService {
 
     @Override
     public UsuarioResponse registrarUsuario(RegistroUsuarioRequest request) {
+        if (request.tipo() != TipoUsuario.VOLUNTARIO) {
+            throw new DatosInvalidosException("Solo se pueden registrar usuarios voluntarios desde esta sección");
+        }
         if (usuarioRepository.existsByCorreo(request.correo())) {
             throw new RecursoDuplicadoException("El correo ya está registrado");
         }
@@ -63,8 +67,8 @@ public class UsuarioServiceImpl implements UsuarioService, UserDetailsService {
     @Override
     public void eliminarUsuario(String idUsuario) {
         Usuario usuario = buscarUsuario(idUsuario);
-        if (usuario instanceof Administrador && contarAdministradores() <= 1) {
-            throw new DatosInvalidosException("No se puede eliminar al único administrador del sistema");
+        if (!(usuario instanceof Voluntario)) {
+            throw new DatosInvalidosException("Solo se pueden eliminar cuentas de voluntarios desde esta sección");
         }
         usuarioRepository.delete(usuario);
     }
@@ -86,9 +90,4 @@ public class UsuarioServiceImpl implements UsuarioService, UserDetailsService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("El usuario con id " + idUsuario + " no existe"));
     }
 
-    private long contarAdministradores() {
-        return usuarioRepository.findAll().stream()
-                .filter(Administrador.class::isInstance)
-                .count();
-    }
 }
