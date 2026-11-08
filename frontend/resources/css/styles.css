@@ -299,6 +299,17 @@ body.is-login { background: var(--green); }
 
 .plain-card p { margin: 0; line-height: 1.5; }
 
+.view-load-error {
+  max-width: 640px;
+  margin: 32px auto;
+  border-radius: 12px;
+  padding: 22px 24px;
+  background: #fff;
+  box-shadow: var(--shadow);
+  color: #8d2929;
+  line-height: 1.5;
+}
+
 .dashboard-welcome,
 .dashboard-card {
   background: var(--card);

@@ -8,36 +8,9 @@
   <link rel="stylesheet" href="resources/css/styles.css">
 </head>
 <body class="is-login">
-  <section id="view-login" class="view-login" aria-label="Inicio de sesión">
-    <div class="login-panel">
-      <div class="brand-pill">
-        <div class="brand-lockup">
-          <div class="logo-slot logo-slot--login" role="img" aria-label="Logo de SantanDar"></div>
-          <h1>SantanDar</h1>
-        </div>
-        <p>Gestión de Donaciones | Donation Management</p>
-      </div>
+  <div id="view-login-host"></div>
 
-      <form id="login-form" class="login-form" action="#" method="post">
-        <div class="login-field">
-          <label class="sr-only" for="correo">Correo</label>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 19.2c1.4-3 3.8-4.4 7-4.4s5.6 1.4 7 4.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          <input id="correo" name="correo" type="email" placeholder="USERNAME" autocomplete="username" required>
-        </div>
-        <div class="login-field">
-          <label class="sr-only" for="clave">Clave</label>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="10.5" width="12" height="8.5" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8.5 10.5V8.2a3.5 3.5 0 0 1 7 0v2.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          <input id="clave" name="clave" type="password" placeholder="PASSWORD" autocomplete="current-password" required>
-        </div>
-        <p id="login-message" class="login-message" role="alert" hidden></p>
-        <button class="btn-login" type="submit">LOGIN</button>
-        <div class="login-links">
-          <a href="#registro" data-visual-only>Register</a>
-          <a href="#recuperar" data-visual-only>Forgot password?</a>
-        </div>
-      </form>
-    </div>
-  </section>
+  <p id="view-load-error" class="view-load-error" role="alert" hidden></p>
 
   <div id="app-shell" class="app-shell" hidden>
     <header class="topbar">
@@ -75,236 +48,22 @@
       </aside>
 
       <main class="app-main">
-        <section class="app-view" data-app-view="inicio" hidden>
-          <h2>Inicio</h2>
-          <article class="dashboard-welcome">
-            <div>
-              <h3>¡Bienvenido!</h3>
-              <p>Has iniciado sesión como <strong id="dashboard-user-email"></strong></p>
-            </div>
-          </article>
-          <p id="dashboard-message" class="dashboard-message" role="status" aria-live="polite" hidden></p>
-          <div class="dashboard-grid">
-            <article class="dashboard-card" aria-labelledby="dashboard-dispatch-title">
-              <h3 id="dashboard-dispatch-title">Estado de despacho</h3>
-              <div class="dashboard-pie-content">
-                <div id="dashboard-pie" class="dashboard-pie is-empty" role="img" aria-label="Sin cajas registradas">
-                  <div class="dashboard-pie-center">
-                    <strong id="dashboard-pie-total">0</strong>
-                    <span>cajas</span>
-                  </div>
-                </div>
-                <ul class="dashboard-legend">
-                  <li><span class="legend-swatch legend-swatch--done" aria-hidden="true"></span><span>Despachadas</span><strong id="dashboard-done-count">0</strong></li>
-                  <li><span class="legend-swatch legend-swatch--pending" aria-hidden="true"></span><span>No despachadas</span><strong id="dashboard-pending-count">0</strong></li>
-                </ul>
-              </div>
-            </article>
-            <article class="dashboard-card" aria-labelledby="dashboard-zones-title">
-              <h3 id="dashboard-zones-title">Cajas por zona de destino</h3>
-              <ul class="dashboard-legend dashboard-legend--inline">
-                <li><span class="legend-swatch legend-swatch--done" aria-hidden="true"></span><span>Despachadas</span></li>
-                <li><span class="legend-swatch legend-swatch--pending" aria-hidden="true"></span><span>No despachadas</span></li>
-              </ul>
-              <div id="dashboard-zones-chart" class="dashboard-zones-chart" aria-label="Cantidad de cajas por destino y estado"></div>
-              <p id="dashboard-zones-empty" class="dashboard-empty" hidden>Aún no hay cajas registradas.</p>
-            </article>
-          </div>
-        </section>
+        <div data-view-host="inicio"></div>
 
-        <section class="app-view" data-app-view="inventario" hidden>
-          <h2>Panel de Gestión de Inventario de SantanDar</h2>
-          <div class="inventory-summary">
-            <button class="btn-outline" type="button" data-admin-only hidden>Añadir Nueva Caja</button>
-            <article class="stat-card">
-              <p>Total de Cajas Registradas:</p>
-              <strong id="inventory-total">0</strong>
-            </article>
-          </div>
+        <div data-view-host="inventario"></div>
 
-          <div class="inventory-tools">
-            <label class="sr-only" for="buscar">Buscar caja</label>
-            <input id="buscar" class="search-input" type="search" name="q" placeholder="Buscar..." autocomplete="off">
-            <label class="sr-only" for="filtro-destino">Filtro por destino</label>
-            <select id="filtro-destino" name="zonaDestino">
-              <option value="">Todos los destinos</option>
-            </select>
-          </div>
+        <div data-view-host="registrar"></div>
 
-          <div class="table-card">
-            <p id="inventory-message" role="status" aria-live="polite" hidden></p>
-            <div class="table-scroll">
-              <table class="inventory-table">
-                <thead>
-                  <tr>
-                    <th scope="col">ID Caja</th>
-                    <th scope="col">Destino</th>
-                    <th scope="col">Contenido</th>
-                    <th scope="col">Estado</th>
-                    <th id="inventory-actions-heading" scope="col" data-admin-only hidden>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody id="inventory-body">
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
+        <div data-view-host="despacho"></div>
 
-        <section class="app-view view-center" data-app-view="registrar" hidden>
-          <article class="register-card">
-            <h2>Registrar Nueva Caja</h2>
-            <p id="registrar-message" class="register-message" role="alert" hidden></p>
-            <form id="registrar-form" action="#" method="post">
-              <div class="field-mint">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.2 12 4l8 4.2v7.6L12 20l-8-4.2V8.2Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 12.2 20 8.2M12 12.2V20M12 12.2 4 8.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-                <span class="divider" aria-hidden="true"></span>
-                <label class="sr-only" for="contenido">Descripción de la caja</label>
-                <input id="contenido" name="contenido" type="text" placeholder="Descripción de la Caja" autocomplete="off" required>
-              </div>
-              <div class="field-mint">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.4 6-10a6 6 0 1 0-12 0c0 4.6 6 10 6 10Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="11" r="1.8" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-                <span class="divider" aria-hidden="true"></span>
-                <label class="sr-only" for="zonaDestino">Zona de destino</label>
-                <input id="zonaDestino" name="zonaDestino" type="text" placeholder="Zona de Destino" autocomplete="off" required>
-              </div>
-              <button class="btn-pill" type="submit">GUARDAR Y GENERAR QR</button>
-            </form>
-          </article>
-        </section>
-
-        <section class="app-view" data-app-view="despacho" hidden>
-          <h2>Despacho</h2>
-          <div class="dispatch-summary" aria-label="Resumen de cajas">
-            <article class="stat-card">
-              <p>Cajas despachadas:</p>
-              <strong id="dispatch-total-done">0</strong>
-            </article>
-            <article class="stat-card">
-              <p>Cajas no despachadas:</p>
-              <strong id="dispatch-total-pending">0</strong>
-            </article>
-          </div>
-
-          <div class="dispatch-tools">
-            <label class="sr-only" for="dispatch-search">Buscar caja</label>
-            <input id="dispatch-search" class="search-input" type="search" name="dispatch-q" placeholder="Buscar..." autocomplete="off">
-            <label class="sr-only" for="dispatch-destination">Filtro por destino</label>
-            <select id="dispatch-destination" name="dispatch-zonaDestino">
-              <option value="">Todos los destinos</option>
-            </select>
-            <button id="dispatch-all" class="btn-outline" type="button" data-admin-only hidden>Despachar todas las cajas filtradas</button>
-          </div>
-
-          <div class="table-card">
-            <p id="dispatch-message" role="status" aria-live="polite" hidden></p>
-            <div class="table-scroll">
-              <table class="inventory-table">
-                <thead>
-                  <tr>
-                    <th scope="col">ID Caja</th>
-                    <th scope="col">Destino</th>
-                    <th scope="col">Contenido</th>
-                    <th scope="col">Estado</th>
-                    <th scope="col" data-admin-only hidden>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody id="dispatch-body"></tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <section class="app-view" data-app-view="usuarios" hidden>
-          <h2>Usuarios</h2>
-          <div class="users-layout">
-            <article class="user-register-card">
-              <h3>Agregar voluntario</h3>
-              <p id="users-form-message" class="users-message" role="status" aria-live="polite" hidden></p>
-              <form id="user-form" class="user-form" action="#" method="post">
-                <label for="user-email">Correo</label>
-                <input id="user-email" name="correo" type="email" autocomplete="email" required>
-                <label for="user-password">Contraseña</label>
-                <input id="user-password" name="clave" type="password" minlength="8" autocomplete="new-password" required>
-                <button class="btn-pill" type="submit">Agregar voluntario</button>
-              </form>
-            </article>
-
-            <div class="table-card users-table-card">
-              <p id="users-message" role="status" aria-live="polite" hidden></p>
-              <div class="table-scroll">
-                <table class="inventory-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Correo</th>
-                      <th scope="col">Tipo de usuario</th>
-                      <th scope="col">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody id="users-body"></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </section>
+        <div data-view-host="usuarios"></div>
       </main>
     </div>
   </div>
 
-  <dialog id="qr-dialog" class="qr-dialog" aria-labelledby="qr-title">
-    <form method="dialog">
-      <button class="qr-dialog-close" type="submit" aria-label="Cerrar">×</button>
-    </form>
-    <h2 id="qr-title">Código QR de la caja</h2>
-    <div id="qr-code" class="qr-code" role="img" aria-label="Código QR con los datos de la caja"></div>
-    <p id="qr-error" class="qr-error" role="alert" hidden></p>
-    <p id="qr-details" class="qr-details"></p>
-    <p class="qr-help">Al escanear el código se mostrarán estos datos de la caja.</p>
-  </dialog>
-
-  <dialog id="delete-confirm-dialog" class="qr-dialog" aria-labelledby="delete-confirm-title">
-    <h2 id="delete-confirm-title">Eliminar caja</h2>
-    <p id="delete-confirm-message"></p>
-    <div class="delete-confirm-actions">
-      <button class="btn-outline" type="button" value="cancel">Cancelar</button>
-      <button class="btn-pill" type="button" value="confirm">Eliminar</button>
-    </div>
-  </dialog>
-
-  <dialog id="dispatch-confirm-dialog" class="qr-dialog" aria-labelledby="dispatch-confirm-title">
-    <h2 id="dispatch-confirm-title">Despachar cajas</h2>
-    <p id="dispatch-confirm-message"></p>
-    <div class="delete-confirm-actions">
-      <button class="btn-outline" type="button" value="cancel">Cancelar</button>
-      <button class="btn-pill" type="button" value="confirm">Despachar</button>
-    </div>
-  </dialog>
-
-  <dialog id="user-delete-confirm-dialog" class="qr-dialog" aria-labelledby="user-delete-confirm-title">
-    <h2 id="user-delete-confirm-title">Eliminar voluntario</h2>
-    <p id="user-delete-confirm-message"></p>
-    <div class="delete-confirm-actions">
-      <button class="btn-outline" type="button" value="cancel">Cancelar</button>
-      <button class="btn-pill" type="button" value="confirm">Eliminar</button>
-    </div>
-  </dialog>
-
-  <dialog id="edit-box-dialog" class="qr-dialog edit-box-dialog" aria-labelledby="edit-box-title">
-    <h2 id="edit-box-title">Editar caja</h2>
-    <p id="edit-box-message" class="register-message" role="alert" hidden></p>
-    <form id="edit-box-form">
-      <label for="edit-box-content">Contenido</label>
-      <input id="edit-box-content" name="contenido" type="text" autocomplete="off" required>
-      <label for="edit-box-destination">Destino</label>
-      <input id="edit-box-destination" name="zonaDestino" type="text" autocomplete="off" required>
-      <div class="delete-confirm-actions">
-        <button class="btn-outline" type="button" value="cancel">Cancelar</button>
-        <button class="btn-pill" type="submit">Guardar cambios</button>
-      </div>
-    </form>
-  </dialog>
+  <div id="dialog-host">  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="resources/js/app.js"></script>
+  <script src="resources/js/view-loader.js"></script>
 </body>
 </html>

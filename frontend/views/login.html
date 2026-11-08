@@ -1,0 +1,30 @@
+<section id="view-login" class="view-login" aria-label="Inicio de sesión">
+    <div class="login-panel">
+      <div class="brand-pill">
+        <div class="brand-lockup">
+          <div class="logo-slot logo-slot--login" role="img" aria-label="Logo de SantanDar"></div>
+          <h1>SantanDar</h1>
+        </div>
+        <p>Gestión de Donaciones | Donation Management</p>
+      </div>
+
+      <form id="login-form" class="login-form" action="#" method="post">
+        <div class="login-field">
+          <label class="sr-only" for="correo">Correo</label>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 19.2c1.4-3 3.8-4.4 7-4.4s5.6 1.4 7 4.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <input id="correo" name="correo" type="email" placeholder="USERNAME" autocomplete="username" required>
+        </div>
+        <div class="login-field">
+          <label class="sr-only" for="clave">Clave</label>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="10.5" width="12" height="8.5" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8.5 10.5V8.2a3.5 3.5 0 0 1 7 0v2.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <input id="clave" name="clave" type="password" placeholder="PASSWORD" autocomplete="current-password" required>
+        </div>
+        <p id="login-message" class="login-message" role="alert" hidden></p>
+        <button class="btn-login" type="submit">LOGIN</button>
+        <div class="login-links">
+          <a href="#registro" data-visual-only>Register</a>
+          <a href="#recuperar" data-visual-only>Forgot password?</a>
+        </div>
+      </form>
+    </div>
+  </section>

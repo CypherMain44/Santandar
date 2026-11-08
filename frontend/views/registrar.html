@@ -1,0 +1,21 @@
+<section class="app-view view-center" data-app-view="registrar" hidden>
+          <article class="register-card">
+            <h2>Registrar Nueva Caja</h2>
+            <p id="registrar-message" class="register-message" role="alert" hidden></p>
+            <form id="registrar-form" action="#" method="post">
+              <div class="field-mint">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.2 12 4l8 4.2v7.6L12 20l-8-4.2V8.2Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 12.2 20 8.2M12 12.2V20M12 12.2 4 8.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+                <span class="divider" aria-hidden="true"></span>
+                <label class="sr-only" for="contenido">Descripción de la caja</label>
+                <input id="contenido" name="contenido" type="text" placeholder="Descripción de la Caja" autocomplete="off" required>
+              </div>
+              <div class="field-mint">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.4 6-10a6 6 0 1 0-12 0c0 4.6 6 10 6 10Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="11" r="1.8" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+                <span class="divider" aria-hidden="true"></span>
+                <label class="sr-only" for="zonaDestino">Zona de destino</label>
+                <input id="zonaDestino" name="zonaDestino" type="text" placeholder="Zona de Destino" autocomplete="off" required>
+              </div>
+              <button class="btn-pill" type="submit">GUARDAR Y GENERAR QR</button>
+            </form>
+          </article>
+        </section>
