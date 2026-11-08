@@ -145,9 +145,44 @@
 
         <section class="app-view" data-app-view="despacho" hidden>
           <h2>Despacho</h2>
-          <article class="plain-card">
-            <p>En esta vista se listarán los envíos y el seguimiento de las cajas que salgan a su zona de destino.</p>
-          </article>
+          <div class="dispatch-summary" aria-label="Resumen de cajas">
+            <article class="stat-card">
+              <p>Cajas despachadas:</p>
+              <strong id="dispatch-total-done">0</strong>
+            </article>
+            <article class="stat-card">
+              <p>Cajas no despachadas:</p>
+              <strong id="dispatch-total-pending">0</strong>
+            </article>
+          </div>
+
+          <div class="dispatch-tools">
+            <label class="sr-only" for="dispatch-search">Buscar caja</label>
+            <input id="dispatch-search" class="search-input" type="search" name="dispatch-q" placeholder="Buscar..." autocomplete="off">
+            <label class="sr-only" for="dispatch-destination">Filtro por destino</label>
+            <select id="dispatch-destination" name="dispatch-zonaDestino">
+              <option value="">Todos los destinos</option>
+            </select>
+            <button id="dispatch-all" class="btn-outline" type="button" data-admin-only hidden>Despachar todas las cajas filtradas</button>
+          </div>
+
+          <div class="table-card">
+            <p id="dispatch-message" role="status" aria-live="polite" hidden></p>
+            <div class="table-scroll">
+              <table class="inventory-table">
+                <thead>
+                  <tr>
+                    <th scope="col">ID Caja</th>
+                    <th scope="col">Destino</th>
+                    <th scope="col">Contenido</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col" data-admin-only hidden>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="dispatch-body"></tbody>
+              </table>
+            </div>
+          </div>
         </section>
 
         <section class="app-view" data-app-view="usuarios" hidden>
@@ -177,6 +212,15 @@
     <div class="delete-confirm-actions">
       <button class="btn-outline" type="button" value="cancel">Cancelar</button>
       <button class="btn-pill" type="button" value="confirm">Eliminar</button>
+    </div>
+  </dialog>
+
+  <dialog id="dispatch-confirm-dialog" class="qr-dialog" aria-labelledby="dispatch-confirm-title">
+    <h2 id="dispatch-confirm-title">Despachar cajas</h2>
+    <p id="dispatch-confirm-message"></p>
+    <div class="delete-confirm-actions">
+      <button class="btn-outline" type="button" value="cancel">Cancelar</button>
+      <button class="btn-pill" type="button" value="confirm">Despachar</button>
     </div>
   </dialog>
 

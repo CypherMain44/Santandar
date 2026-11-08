@@ -307,6 +307,13 @@ body.is-login { background: var(--green); }
   margin: 20px 0 8px;
 }
 
+.dispatch-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 20px 0 8px;
+}
+
 .btn-outline {
   border: 1.5px solid var(--green);
   background: #fff;
@@ -338,7 +345,8 @@ body.is-login { background: var(--green); }
   line-height: 1.15;
 }
 
-.inventory-tools {
+.inventory-tools,
+.dispatch-tools {
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
@@ -347,7 +355,8 @@ body.is-login { background: var(--green); }
 }
 
 .search-input,
-.inventory-tools select {
+.inventory-tools select,
+.dispatch-tools select {
   height: 36px;
   border: 1px solid #cfcfcf;
   border-radius: 6px;
@@ -357,6 +366,11 @@ body.is-login { background: var(--green); }
 }
 
 .search-input { width: min(220px, 100%); }
+
+.dispatch-tools .btn-outline {
+  min-height: 36px;
+  padding: 8px 14px;
+}
 
 .table-card {
   border-radius: 8px;
@@ -675,10 +689,13 @@ a:focus-visible {
 
   .brand-name { font-size: 1.3rem; }
 
-  .inventory-tools { justify-content: stretch; }
+  .inventory-tools,
+  .dispatch-tools { justify-content: stretch; }
 
   .search-input,
-  .inventory-tools select { width: 100%; }
+  .inventory-tools select,
+  .dispatch-tools select,
+  .dispatch-tools .btn-outline { width: 100%; }
 }
 
 @media (max-width: 520px) {

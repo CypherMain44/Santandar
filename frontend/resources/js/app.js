@@ -10,12 +10,21 @@ const inventoryMessage = document.getElementById("inventory-message");
 const inventoryTotal = document.getElementById("inventory-total");
 const searchInput = document.getElementById("buscar");
 const destinationFilter = document.getElementById("filtro-destino");
+const dispatchBody = document.getElementById("dispatch-body");
+const dispatchMessage = document.getElementById("dispatch-message");
+const dispatchSearchInput = document.getElementById("dispatch-search");
+const dispatchDestinationFilter = document.getElementById("dispatch-destination");
+const dispatchTotalDone = document.getElementById("dispatch-total-done");
+const dispatchTotalPending = document.getElementById("dispatch-total-pending");
+const dispatchAllButton = document.getElementById("dispatch-all");
 const qrDialog = document.getElementById("qr-dialog");
 const qrCodeElement = document.getElementById("qr-code");
 const qrError = document.getElementById("qr-error");
 const qrDetails = document.getElementById("qr-details");
 const deleteConfirmDialog = document.getElementById("delete-confirm-dialog");
 const deleteConfirmMessage = document.getElementById("delete-confirm-message");
+const dispatchConfirmDialog = document.getElementById("dispatch-confirm-dialog");
+const dispatchConfirmMessage = document.getElementById("dispatch-confirm-message");
 const editBoxDialog = document.getElementById("edit-box-dialog");
 const editBoxForm = document.getElementById("edit-box-form");
 const editBoxMessage = document.getElementById("edit-box-message");
@@ -26,6 +35,7 @@ let inventory = [];
 let editingBoxId = null;
 
 inventoryBody.replaceChildren();
+dispatchBody.replaceChildren();
 
 function updateAdminControls() {
   const isAdministrator = currentUserType === "ADMINISTRADOR";
@@ -62,7 +72,7 @@ function showView(name) {
   });
 
   updateAdminControls();
-  if (name === "inventario") loadInventory();
+  if (name === "inventario" || name === "despacho") loadInventory();
   closeDrawer();
 }
 
@@ -278,11 +288,7 @@ editBoxDialog.addEventListener("close", () => {
 function renderInventory() {
   const search = searchInput.value.trim().toLocaleLowerCase();
   const destination = destinationFilter.value;
-  const filteredBoxes = inventory.filter((box) => {
-    const matchesSearch = [box.idCaja, box.zonaDestino, box.contenido, box.estadoCaja]
-      .some((value) => String(value || "").toLocaleLowerCase().includes(search));
-    return matchesSearch && (!destination || box.zonaDestino === destination);
-  });
+  const filteredBoxes = filterBoxes(search, destination);
 
   inventoryBody.replaceChildren();
   filteredBoxes.forEach((box) => {
@@ -290,24 +296,7 @@ function renderInventory() {
     addCell(row, box.idCaja);
     addCell(row, box.zonaDestino);
     addCell(row, box.contenido);
-
-    const statusCell = document.createElement("td");
-    const status = document.createElement("span");
-    const dot = document.createElement("i");
-    const statusLabels = {
-      DESPACHADO: { label: "Despachado", dot: "dot--green" },
-      NO_DESPACHADO: { label: "No despachado", dot: "dot--yellow" }
-    };
-    const statusInfo = statusLabels[box.estadoCaja] || {
-      label: box.estadoCaja || "Sin estado",
-      dot: "dot--gray"
-    };
-    status.className = "status";
-    dot.className = `dot ${statusInfo.dot}`;
-    dot.setAttribute("aria-hidden", "true");
-    status.append(dot, document.createTextNode(statusInfo.label));
-    statusCell.appendChild(status);
-    row.appendChild(statusCell);
+    addStatusCell(row, box);
 
     if (currentUserType === "ADMINISTRADOR") addActionsCell(row, box);
     inventoryBody.appendChild(row);
@@ -321,11 +310,178 @@ function renderInventory() {
   inventoryMessage.hidden = filteredBoxes.length > 0;
 }
 
+function filterBoxes(search, destination) {
+  return inventory.filter((box) => {
+    const matchesSearch = [box.idCaja, box.zonaDestino, box.contenido, box.estadoCaja]
+      .some((value) => String(value || "").toLocaleLowerCase().includes(search));
+    return matchesSearch && (!destination || box.zonaDestino === destination);
+  });
+}
+
+function addStatusCell(row, box) {
+  const statusCell = document.createElement("td");
+  const status = document.createElement("span");
+  const dot = document.createElement("i");
+  const statusLabels = {
+    DESPACHADO: { label: "Despachado", dot: "dot--green" },
+    NO_DESPACHADO: { label: "No despachado", dot: "dot--yellow" }
+  };
+  const statusInfo = statusLabels[box.estadoCaja] || {
+    label: box.estadoCaja || "Sin estado",
+    dot: "dot--gray"
+  };
+  status.className = "status";
+  dot.className = `dot ${statusInfo.dot}`;
+  dot.setAttribute("aria-hidden", "true");
+  status.append(dot, document.createTextNode(statusInfo.label));
+  statusCell.appendChild(status);
+  row.appendChild(statusCell);
+}
+
+function renderDispatch() {
+  const search = dispatchSearchInput.value.trim().toLocaleLowerCase();
+  const destination = dispatchDestinationFilter.value;
+  const filteredBoxes = filterBoxes(search, destination)
+    .filter((box) => box.estadoCaja === "NO_DESPACHADO");
+
+  dispatchBody.replaceChildren();
+  filteredBoxes.forEach((box) => {
+    const row = document.createElement("tr");
+    addCell(row, box.idCaja);
+    addCell(row, box.zonaDestino);
+    addCell(row, box.contenido);
+    addStatusCell(row, box);
+
+    if (currentUserType === "ADMINISTRADOR") {
+      const cell = document.createElement("td");
+      const actions = document.createElement("div");
+      actions.className = "row-actions";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = "Despachar caja";
+      button.setAttribute("aria-label", `Despachar caja ${box.idCaja}`);
+      button.addEventListener("click", () => dispatchBox(box, button));
+      actions.appendChild(button);
+      cell.appendChild(actions);
+      row.appendChild(cell);
+    }
+
+    dispatchBody.appendChild(row);
+  });
+
+  dispatchTotalDone.textContent = String(inventory.filter((box) => box.estadoCaja === "DESPACHADO").length);
+  dispatchTotalPending.textContent = String(inventory.filter((box) => box.estadoCaja === "NO_DESPACHADO").length);
+  dispatchAllButton.disabled = filteredBoxes.length === 0;
+  dispatchMessage.textContent = inventory.length === 0
+    ? "No hay cajas registradas."
+    : filteredBoxes.length === 0
+      ? "No hay cajas pendientes que coincidan con los filtros."
+      : "";
+  dispatchMessage.hidden = filteredBoxes.length > 0;
+}
+
+async function confirmDispatchAll(count) {
+  dispatchConfirmMessage.textContent = `¿Deseas despachar las ${count} cajas pendientes que coinciden con los filtros?`;
+  const confirmation = new Promise((resolve) => {
+    dispatchConfirmDialog.addEventListener("close", () => {
+      resolve(dispatchConfirmDialog.returnValue === "confirm");
+    }, { once: true });
+  });
+  dispatchConfirmDialog.showModal();
+  return confirmation;
+}
+
+async function updateBoxStatus(box) {
+  const response = await fetch(`${apiBaseUrl}/api/cajas/${encodeURIComponent(box.idCaja)}/estado`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${sessionStorage.getItem("authToken")}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ estado: "DESPACHADO" })
+  });
+
+  if (!response.ok) {
+    let message = `No fue posible despachar la caja ${box.idCaja} (HTTP ${response.status}).`;
+    try {
+      const result = await response.json();
+      message = result.mensaje || message;
+    } catch {
+      // Keep the HTTP status message when the server does not return JSON.
+    }
+    if (response.status === 401) message = "La sesión expiró. Inicia sesión nuevamente.";
+    throw new Error(message);
+  }
+
+  const result = await response.json();
+  if (result.idCaja !== box.idCaja || result.estadoCaja !== "DESPACHADO") {
+    throw new Error(`El servidor devolvió un estado inválido para la caja ${box.idCaja}.`);
+  }
+  inventory = inventory.map((item) => item.idCaja === box.idCaja ? result : item);
+}
+
+async function dispatchBox(box, button) {
+  button.disabled = true;
+  dispatchMessage.hidden = true;
+  try {
+    await updateBoxStatus(box);
+    renderInventory();
+    renderDispatch();
+    dispatchMessage.textContent = `La caja ${box.idCaja} fue despachada.`;
+    dispatchMessage.hidden = false;
+  } catch (error) {
+    dispatchMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : `No fue posible despachar la caja ${box.idCaja}.`;
+    dispatchMessage.hidden = false;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function dispatchFilteredBoxes() {
+  const filteredBoxes = filterBoxes(
+    dispatchSearchInput.value.trim().toLocaleLowerCase(),
+    dispatchDestinationFilter.value
+  ).filter((box) => box.estadoCaja === "NO_DESPACHADO");
+  if (!filteredBoxes.length || currentUserType !== "ADMINISTRADOR") return;
+  if (!await confirmDispatchAll(filteredBoxes.length)) return;
+
+  dispatchAllButton.disabled = true;
+  dispatchMessage.hidden = true;
+  let dispatched = 0;
+  const failures = [];
+
+  for (const box of filteredBoxes) {
+    try {
+      await updateBoxStatus(box);
+      dispatched += 1;
+    } catch (error) {
+      failures.push(error instanceof TypeError
+        ? "No se pudo conectar con el servidor."
+        : error instanceof Error
+          ? error.message
+          : `No fue posible despachar la caja ${box.idCaja}.`);
+    }
+  }
+
+  renderInventory();
+  renderDispatch();
+  dispatchMessage.textContent = failures.length
+    ? `${dispatched} caja(s) despachada(s). ${failures.length} no se pudieron despachar: ${failures.join(" ")}`
+    : `${dispatched} caja(s) despachada(s) correctamente.`;
+  dispatchMessage.hidden = false;
+}
+
 function populateDestinationFilter() {
   const destinations = [...new Set(inventory.map((box) => box.zonaDestino).filter(Boolean))].sort();
   destinationFilter.replaceChildren(new Option("Todos los destinos", ""));
+  dispatchDestinationFilter.replaceChildren(new Option("Todos los destinos", ""));
   destinations.forEach((destination) => {
     destinationFilter.add(new Option(destination, destination));
+    dispatchDestinationFilter.add(new Option(destination, destination));
   });
 }
 
@@ -348,6 +504,7 @@ async function loadInventory() {
     inventoryTotal.textContent = String(inventory.length);
     populateDestinationFilter();
     renderInventory();
+    renderDispatch();
   } catch (error) {
     inventory = [];
     inventoryTotal.textContent = "0";
@@ -358,6 +515,15 @@ async function loadInventory() {
         ? error.message
         : "No fue posible cargar las cajas.";
     inventoryMessage.hidden = false;
+    dispatchTotalDone.textContent = "0";
+    dispatchTotalPending.textContent = "0";
+    dispatchBody.replaceChildren();
+    dispatchMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : "No fue posible cargar las cajas.";
+    dispatchMessage.hidden = false;
   }
 }
 
@@ -477,9 +643,14 @@ document.querySelectorAll(".nav-item").forEach((item) => {
 
 searchInput.addEventListener("input", renderInventory);
 destinationFilter.addEventListener("change", renderInventory);
+dispatchSearchInput.addEventListener("input", renderDispatch);
+dispatchDestinationFilter.addEventListener("change", renderDispatch);
+dispatchAllButton.addEventListener("click", dispatchFilteredBoxes);
 document.querySelector(".inventory-summary .btn-outline").addEventListener("click", () => showView("registrar"));
 deleteConfirmDialog.querySelector('[value="cancel"]').addEventListener("click", () => deleteConfirmDialog.close("cancel"));
 deleteConfirmDialog.querySelector('[value="confirm"]').addEventListener("click", () => deleteConfirmDialog.close("confirm"));
+dispatchConfirmDialog.querySelector('[value="cancel"]').addEventListener("click", () => dispatchConfirmDialog.close("cancel"));
+dispatchConfirmDialog.querySelector('[value="confirm"]').addEventListener("click", () => dispatchConfirmDialog.close("confirm"));
 
 document.querySelectorAll('form:not(#login-form):not(#registrar-form):not(#edit-box-form):not([method="dialog"])').forEach((form) => {
   form.addEventListener("submit", (event) => event.preventDefault());
