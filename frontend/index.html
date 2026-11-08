@@ -180,6 +180,21 @@
     </div>
   </dialog>
 
+  <dialog id="edit-box-dialog" class="qr-dialog edit-box-dialog" aria-labelledby="edit-box-title">
+    <h2 id="edit-box-title">Editar caja</h2>
+    <p id="edit-box-message" class="register-message" role="alert" hidden></p>
+    <form id="edit-box-form">
+      <label for="edit-box-content">Contenido</label>
+      <input id="edit-box-content" name="contenido" type="text" autocomplete="off" required>
+      <label for="edit-box-destination">Destino</label>
+      <input id="edit-box-destination" name="zonaDestino" type="text" autocomplete="off" required>
+      <div class="delete-confirm-actions">
+        <button class="btn-outline" type="button" value="cancel">Cancelar</button>
+        <button class="btn-pill" type="submit">Guardar cambios</button>
+      </div>
+    </form>
+  </dialog>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="resources/js/app.js"></script>
 </body>

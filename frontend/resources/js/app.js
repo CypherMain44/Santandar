@@ -16,10 +16,14 @@ const qrError = document.getElementById("qr-error");
 const qrDetails = document.getElementById("qr-details");
 const deleteConfirmDialog = document.getElementById("delete-confirm-dialog");
 const deleteConfirmMessage = document.getElementById("delete-confirm-message");
+const editBoxDialog = document.getElementById("edit-box-dialog");
+const editBoxForm = document.getElementById("edit-box-form");
+const editBoxMessage = document.getElementById("edit-box-message");
 const registerForm = document.getElementById("registrar-form");
 const registerMessage = document.getElementById("registrar-message");
 let currentUserType = null;
 let inventory = [];
+let editingBoxId = null;
 
 inventoryBody.replaceChildren();
 
@@ -173,6 +177,7 @@ function addActionsCell(row, box) {
   editButton.type = "button";
   editButton.textContent = "Editar";
   editButton.setAttribute("aria-label", `Editar ${box.idCaja}`);
+  editButton.addEventListener("click", () => openEditBox(box));
   actions.appendChild(editButton);
 
   const deleteButton = document.createElement("button");
@@ -192,6 +197,83 @@ function addActionsCell(row, box) {
   cell.appendChild(actions);
   row.appendChild(cell);
 }
+
+function openEditBox(box) {
+  if (currentUserType !== "ADMINISTRADOR") return;
+
+  editingBoxId = box.idCaja;
+  editBoxForm.elements.contenido.value = box.contenido || "";
+  editBoxForm.elements.zonaDestino.value = box.zonaDestino || "";
+  editBoxMessage.hidden = true;
+  editBoxDialog.showModal();
+  editBoxForm.elements.contenido.focus();
+}
+
+editBoxForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  editBoxMessage.hidden = true;
+
+  if (currentUserType !== "ADMINISTRADOR" || !editingBoxId) {
+    editBoxDialog.close();
+    return;
+  }
+
+  const submitButton = editBoxForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/cajas/${encodeURIComponent(editingBoxId)}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${sessionStorage.getItem("authToken")}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contenido: editBoxForm.elements.contenido.value.trim(),
+        zonaDestino: editBoxForm.elements.zonaDestino.value.trim()
+      })
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      const validationMessage = result.errores && Object.values(result.errores)[0];
+      editBoxMessage.textContent = response.status === 401
+        ? "La sesión expiró. Inicia sesión nuevamente."
+        : response.status === 403
+          ? "Solo un administrador puede editar cajas."
+          : validationMessage || result.mensaje || "No fue posible actualizar la caja.";
+      editBoxMessage.hidden = false;
+      return;
+    }
+
+    if (result.idCaja !== editingBoxId) {
+      throw new Error("El servidor devolvió una caja distinta a la editada.");
+    }
+
+    inventory = inventory.map((box) => box.idCaja === editingBoxId ? result : box);
+    const updatedBoxId = editingBoxId;
+    editBoxDialog.close();
+    populateDestinationFilter();
+    renderInventory();
+    inventoryMessage.textContent = `La caja ${updatedBoxId} fue actualizada.`;
+    inventoryMessage.hidden = false;
+  } catch (error) {
+    editBoxMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : "No fue posible actualizar la caja.";
+    editBoxMessage.hidden = false;
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+editBoxDialog.querySelector('[value="cancel"]').addEventListener("click", () => editBoxDialog.close());
+editBoxDialog.addEventListener("close", () => {
+  editingBoxId = null;
+  editBoxForm.reset();
+});
 
 function renderInventory() {
   const search = searchInput.value.trim().toLocaleLowerCase();
@@ -399,7 +481,7 @@ document.querySelector(".inventory-summary .btn-outline").addEventListener("clic
 deleteConfirmDialog.querySelector('[value="cancel"]').addEventListener("click", () => deleteConfirmDialog.close("cancel"));
 deleteConfirmDialog.querySelector('[value="confirm"]').addEventListener("click", () => deleteConfirmDialog.close("confirm"));
 
-document.querySelectorAll('form:not(#login-form):not(#registrar-form):not([method="dialog"])').forEach((form) => {
+document.querySelectorAll('form:not(#login-form):not(#registrar-form):not(#edit-box-form):not([method="dialog"])').forEach((form) => {
   form.addEventListener("submit", (event) => event.preventDefault());
 });
 
