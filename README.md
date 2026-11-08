@@ -32,9 +32,7 @@ santandar/
     └── informes/    Requerimientos, EDT y gestión del proyecto
 ```
 
-Las pantallas se cargan desde archivos de `frontend/views/`; consulta
-`frontend/views/README.md` para agregar una y `frontend/resources/images/README.md`
-para incorporar el logo.
+Las pantallas se cargan desde archivos de `frontend/views/`; 
 
 ## Puesta en marcha del backend
 
