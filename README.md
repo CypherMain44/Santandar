@@ -17,19 +17,37 @@ Sistema web para la gestión de inventario y trazabilidad de donaciones mediante
 
 ## Estructura del repositorio
 
-```
-santandar/
-├── backend/     API REST (Spring Boot)
-├── frontend/    Aplicación web estática servida por HTTP
-│   ├── index.html
-│   ├── views/       Pantallas HTML y guía de organización
+```text
+Santandar/
+├── backend/                         API REST con Spring Boot
+│   ├── .mvn/wrapper/                Configuración del Maven Wrapper
+│   ├── src/main/java/edu/uis/santandar_backend/
+│   │   ├── config/                  Configuración y autenticación JWT
+│   │   ├── controller/              Controladores REST
+│   │   ├── dto/                     Objetos de solicitud y respuesta
+│   │   ├── exception/               Excepciones y manejo de errores
+│   │   ├── mapper/                  Conversión entre modelos y DTO
+│   │   ├── model/                   Entidades y enumeraciones
+│   │   ├── repository/              Repositorios MongoDB
+│   │   └── service/                 Lógica de negocio e implementaciones
+│   ├── src/test/java/               Pruebas unitarias e integración
+│   ├── mvnw, mvnw.cmd               Maven Wrapper
+│   └── pom.xml                      Dependencias y configuración de Maven
+├── frontend/                        Aplicación web estática
+│   ├── index.html                   Página principal
+│   ├── views/                       Pantallas HTML y guía de organización
 │   └── resources/
-│       ├── css/
-│       ├── js/
-│       └── images/  Logo y recursos gráficos
-└── docs/
-    ├── diagramas/   Diagramas UML
-    └── informes/    Requerimientos, EDT y gestión del proyecto
+│       ├── css/                     Estilos
+│       ├── images/                  Logo y recursos gráficos
+│       └── js/                      Lógica y carga de vistas
+├── docs/
+│   ├── diagramas/                   Diagramas UML
+│   └── informes/                    Informes y documentos del proyecto
+├── Pruebas/
+│   ├── Selenium/                    Pruebas automatizadas con Maven
+│   └── jmeter/                      Plan, scripts y resultados de pruebas de carga
+├── bin/                             Copia versionada de partes del proyecto
+└── .gitignore
 ```
 
 Las pantallas se cargan desde archivos de `frontend/views/`; consulta
