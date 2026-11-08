@@ -17,6 +17,14 @@ const dispatchDestinationFilter = document.getElementById("dispatch-destination"
 const dispatchTotalDone = document.getElementById("dispatch-total-done");
 const dispatchTotalPending = document.getElementById("dispatch-total-pending");
 const dispatchAllButton = document.getElementById("dispatch-all");
+const dashboardUserEmail = document.getElementById("dashboard-user-email");
+const dashboardMessage = document.getElementById("dashboard-message");
+const dashboardPie = document.getElementById("dashboard-pie");
+const dashboardPieTotal = document.getElementById("dashboard-pie-total");
+const dashboardDoneCount = document.getElementById("dashboard-done-count");
+const dashboardPendingCount = document.getElementById("dashboard-pending-count");
+const dashboardZonesChart = document.getElementById("dashboard-zones-chart");
+const dashboardZonesEmpty = document.getElementById("dashboard-zones-empty");
 const qrDialog = document.getElementById("qr-dialog");
 const qrCodeElement = document.getElementById("qr-code");
 const qrError = document.getElementById("qr-error");
@@ -37,6 +45,7 @@ const usersMessage = document.getElementById("users-message");
 const userDeleteConfirmDialog = document.getElementById("user-delete-confirm-dialog");
 const userDeleteConfirmMessage = document.getElementById("user-delete-confirm-message");
 let currentUserType = null;
+let currentUserEmail = "";
 let inventory = [];
 let users = [];
 let editingBoxId = null;
@@ -82,6 +91,10 @@ function showView(name) {
   });
 
   updateAdminControls();
+  if (name === "inicio") {
+    dashboardUserEmail.textContent = currentUserEmail;
+    loadInventory();
+  }
   if (name === "inventario" || name === "despacho") loadInventory();
   if (name === "usuarios") loadUsers();
   closeDrawer();
@@ -389,6 +402,68 @@ function renderDispatch() {
       ? "No hay cajas pendientes que coincidan con los filtros."
       : "";
   dispatchMessage.hidden = filteredBoxes.length > 0;
+  renderDashboard();
+}
+
+function renderDashboard() {
+  const dispatched = inventory.filter((box) => box.estadoCaja === "DESPACHADO").length;
+  const pending = inventory.length - dispatched;
+  const dispatchedPercent = inventory.length ? (dispatched / inventory.length) * 100 : 0;
+
+  dashboardPieTotal.textContent = String(inventory.length);
+  dashboardDoneCount.textContent = String(dispatched);
+  dashboardPendingCount.textContent = String(pending);
+  dashboardPie.classList.toggle("is-empty", inventory.length === 0);
+  dashboardPie.style.setProperty("--dispatched-percent", `${dispatchedPercent}%`);
+  dashboardPie.setAttribute(
+    "aria-label",
+    `${inventory.length} cajas en total: ${dispatched} despachadas y ${pending} no despachadas`
+  );
+
+  const zones = new Map();
+  inventory.forEach((box) => {
+    const destination = box.zonaDestino || "Sin destino";
+    const counts = zones.get(destination) || { dispatched: 0, pending: 0 };
+    if (box.estadoCaja === "DESPACHADO") counts.dispatched += 1;
+    else counts.pending += 1;
+    zones.set(destination, counts);
+  });
+
+  const sortedZones = [...zones.entries()].sort(([first], [second]) => first.localeCompare(second));
+  const maxZoneTotal = Math.max(1, ...sortedZones.map(([, counts]) => counts.dispatched + counts.pending));
+  dashboardZonesChart.replaceChildren();
+  sortedZones.forEach(([destination, counts]) => {
+    const group = document.createElement("section");
+    group.className = "dashboard-zone";
+    const title = document.createElement("h4");
+    title.textContent = destination;
+    group.appendChild(title);
+
+    [
+      { label: "Despachadas", count: counts.dispatched, className: "done" },
+      { label: "No despachadas", count: counts.pending, className: "pending" }
+    ].forEach((item) => {
+      const row = document.createElement("div");
+      row.className = "dashboard-bar-row";
+      const label = document.createElement("span");
+      label.className = "dashboard-bar-label";
+      label.textContent = item.label;
+      const track = document.createElement("div");
+      track.className = "dashboard-bar-track";
+      track.setAttribute("aria-hidden", "true");
+      const fill = document.createElement("div");
+      fill.className = `dashboard-bar-fill dashboard-bar-fill--${item.className}`;
+      fill.style.width = `${(item.count / maxZoneTotal) * 100}%`;
+      track.appendChild(fill);
+      const value = document.createElement("strong");
+      value.textContent = String(item.count);
+      row.append(label, track, value);
+      group.appendChild(row);
+    });
+
+    dashboardZonesChart.appendChild(group);
+  });
+  dashboardZonesEmpty.hidden = sortedZones.length > 0;
 }
 
 async function confirmDispatchAll(count) {
@@ -516,6 +591,7 @@ async function loadInventory() {
     populateDestinationFilter();
     renderInventory();
     renderDispatch();
+    dashboardMessage.hidden = true;
   } catch (error) {
     inventory = [];
     inventoryTotal.textContent = "0";
@@ -535,6 +611,13 @@ async function loadInventory() {
         ? error.message
         : "No fue posible cargar las cajas.";
     dispatchMessage.hidden = false;
+    renderDashboard();
+    dashboardMessage.textContent = error instanceof TypeError
+      ? "No se pudo conectar con el servidor."
+      : error instanceof Error
+        ? error.message
+        : "No fue posible cargar el resumen de cajas.";
+    dashboardMessage.hidden = false;
   }
 }
 
@@ -816,6 +899,7 @@ loginForm.addEventListener("submit", async (event) => {
 
     sessionStorage.setItem("authToken", result.token);
     currentUserType = result.tipo;
+    currentUserEmail = loginForm.elements.correo.value.trim();
     loginForm.reset();
     showView("inicio");
   } catch (error) {
